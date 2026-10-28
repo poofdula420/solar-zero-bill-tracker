@@ -151,15 +151,6 @@
             </div>
         </div>
 
-        <!-- Status Banner -->
-        <div id="status-banner" class="hidden rounded-xl shadow-sm p-6 flex items-center justify-between transition-all duration-300">
-            <div>
-                <h2 id="status-title" class="text-2xl font-bold">Waiting for data...</h2>
-                <p id="status-subtitle" class="text-sm mt-1 opacity-90">Upload your plant data or sync your Google Sheet to see progress.</p>
-            </div>
-            <div id="status-icon" class="text-4xl opacity-80"></div>
-        </div>
-
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
@@ -289,8 +280,19 @@
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Estimated Bill</div>
                         <div class="text-2xl font-black mt-1" id="fin-net">PHP 0.00</div>
+                        <div id="fin-net-comp" class="hidden text-xs font-semibold mt-1"></div>
                     </div>
                 </div>
+
+                <!-- Status Banner (Subtle & Minimalist) -->
+                <div id="status-banner" class="hidden rounded-lg p-3 border text-xs sm:text-sm flex items-center gap-3 transition-all duration-300">
+                    <div id="status-icon" class="text-lg sm:text-xl flex-shrink-0"></div>
+                    <div>
+                        <span id="status-title" class="font-bold"></span>
+                        <span id="status-subtitle" class="opacity-90 ml-1 font-medium"></span>
+                    </div>
+                </div>
+
                 <p class="text-xs text-slate-400 italic">*Note: Calculated using inverter grid data and specified rates to offset Generation Charges via Net Metering.</p>
             </div>
 
@@ -914,11 +916,11 @@
             const bannerIcon = document.getElementById('status-icon');
 
             if (!appState.historicalDaily || Object.keys(appState.historicalDaily).length === 0) {
-                bannerEl.classList.remove('hidden', 'bg-emerald-500', 'bg-red-500', 'text-white');
-                bannerEl.classList.add('bg-amber-500', 'text-white');
-                bannerTitle.textContent = "No Data Found";
+                bannerEl.classList.remove('hidden', 'bg-emerald-500', 'bg-red-500', 'bg-amber-500', 'text-white', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-800', 'bg-red-50', 'border-red-200', 'text-red-800', 'bg-amber-50', 'border-amber-200', 'text-amber-800');
+                bannerEl.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-800');
+                bannerTitle.textContent = "No Data Found.";
                 bannerSub.textContent = "Upload your plant data or sync a Google Sheet to begin.";
-                bannerIcon.innerHTML = '<i class="fa-solid fa-file-circle-xmark"></i>';
+                bannerIcon.innerHTML = '<i class="fa-solid fa-file-circle-xmark text-amber-600"></i>';
                 return;
             }
 
@@ -1284,24 +1286,48 @@
             const bannerSub = document.getElementById('status-subtitle');
             const bannerIcon = document.getElementById('status-icon');
 
-            bannerEl.classList.remove('hidden', 'bg-emerald-500', 'bg-red-500', 'bg-amber-500', 'text-white');
+            bannerEl.classList.remove('hidden', 'bg-emerald-500', 'bg-red-500', 'bg-amber-500', 'text-white', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-800', 'bg-red-50', 'border-red-200', 'text-red-800', 'bg-amber-50', 'border-amber-200', 'text-amber-800');
 
             if (netBill <= 0) {
                 finNetEl.textContent = `- PHP ${Math.abs(netBill).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 finNetEl.className = "text-2xl font-black mt-1 text-emerald-600";
                 
-                bannerEl.classList.add('bg-emerald-500', 'text-white');
+                bannerEl.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
                 bannerTitle.textContent = "On Track for Zero Billing! 🎉";
                 bannerSub.textContent = "Your solar export credits are successfully covering your grid consumption.";
-                bannerIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                bannerIcon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
             } else {
                 finNetEl.textContent = `PHP ${netBill.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 finNetEl.className = "text-2xl font-black mt-1 text-red-600";
                 
-                bannerEl.classList.add('bg-red-500', 'text-white');
+                bannerEl.classList.add('bg-red-50', 'border-red-200', 'text-red-800');
                 bannerTitle.textContent = "Attention: Bill Expected ⚠️";
                 bannerSub.textContent = "Your consumption is currently outpacing your export credits.";
-                bannerIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                bannerIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-600"></i>';
+            }
+
+            // Net Estimated Bill ticker vs yesterday
+            const finNetCompEl = document.getElementById('fin-net-comp');
+            const rawDays = activeData.chartData?.rawDays || [];
+            if (rawDays.length > 1 && finNetCompEl) {
+                const latestDay = rawDays[rawDays.length - 1];
+                const prevPurchased = totals.purchased - (latestDay.purc || 0);
+                const prevFeedIn = totals.feedIn - (latestDay.feedIn || 0);
+                const prevNetBill = (prevPurchased * importRate) - (prevFeedIn * exportRate);
+                const diff = netBill - prevNetBill;
+
+                if (diff > 0.005) {
+                    finNetCompEl.className = "text-xs font-semibold mt-1 text-red-600 block";
+                    finNetCompEl.innerHTML = `<i class="fa-solid fa-arrow-up"></i> +PHP ${diff.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} vs yesterday`;
+                } else if (diff < -0.005) {
+                    finNetCompEl.className = "text-xs font-semibold mt-1 text-emerald-600 block";
+                    finNetCompEl.innerHTML = `<i class="fa-solid fa-arrow-down"></i> -PHP ${Math.abs(diff).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} vs yesterday`;
+                } else {
+                    finNetCompEl.className = "text-xs font-semibold mt-1 text-slate-500 block";
+                    finNetCompEl.innerHTML = `<i class="fa-solid fa-minus"></i> PHP 0.00 vs yesterday`;
+                }
+            } else if (finNetCompEl) {
+                finNetCompEl.classList.add('hidden');
             }
 
             // Actual Bill Data calculation
