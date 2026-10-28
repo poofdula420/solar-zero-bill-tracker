@@ -1,1 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Zero Bill Tracker</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for processing Excel (.xlsx) and CSV files directly in the browser -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
 
+    <nav class="bg-blue-600 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-solar-panel text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide">Solar Zero Bill Tracker</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="cloud-status" class="text-xs font-semibold bg-blue-800 bg-opacity-50 px-3 py-1 rounded-full hidden items-center gap-2 shadow-inner">
+                    <i class="fa-solid fa-cloud"></i> <span id="cloud-status-text">Connecting...</span>
+                </div>
+                <div class="text-sm font-medium opacity-90 hidden sm:block">
+                    Monthly Consumption Dashboard (MORE Power)
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        
+        <!-- Controls & Upload Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col lg:flex-row gap-6 justify-between items-start">
+            
+            <!-- Data Source Block (Hidden) -->
+            <div class="hidden flex-col space-y-2 w-full lg:w-[28%]">
+                <label class="block text-sm font-semibold text-slate-700 h-5">Data Source (File or Google Sheets)</label>
+                <div class="flex flex-col gap-2">
+                    <input type="file" id="file-upload" multiple accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="block w-full text-sm text-slate-500
+                        file:mr-4 file:py-1 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-md h-[34px] pt-[2px]">
+                    <div class="flex gap-2">
+                        <input type="url" id="sheet-url" placeholder="Paste Google Sheets CSV link..." class="w-full px-3 py-1 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs bg-white shadow-sm h-[34px]">
+                        <button id="sync-sheet-btn" class="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition-colors shadow-sm h-[34px]">
+                            Sync
+                        </button>
+                    </div>
+                </div>
+                <div id="sync-status" class="text-[10px] text-slate-500 mt-1 font-medium">Upload a file or sync a CSV link to begin.</div>
+            </div>
+
+            <!-- Billing Cycle Block -->
+            <div class="flex flex-col space-y-2 w-full lg:w-[20%]">
+                <label class="block text-sm font-semibold text-slate-700 h-5" title="Day of the month your billing cycle begins">Billing Cycle Start</label>
+                <input type="number" id="billing-cycle-day" min="1" max="31" value="23" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium shadow-sm h-[42px]">
+                <p class="text-[10px] text-slate-400 italic mt-1 font-medium">Day of month (e.g. 23)</p>
+            </div>
+
+            <!-- Month Selector Block -->
+            <div class="flex flex-col space-y-2 w-full lg:w-[30%] hidden" id="month-selector-container">
+                <label class="block text-sm font-semibold text-slate-700 h-5">Display Month</label>
+                <select id="month-selector" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium shadow-sm h-[42px]">
+                </select>
+                <p class="text-[10px] text-slate-400 italic mt-1 font-medium">Select billing period</p>
+            </div>
+
+            <!-- Rates & Save Block -->
+            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto lg:flex-1 justify-end">
+                <div class="flex flex-col space-y-2 w-full sm:w-auto min-w-[150px]">
+                    <div class="flex justify-between items-center h-5">
+                        <label class="block text-sm font-semibold text-red-600 truncate">Grid Import Rate (PHP)</label>
+                        <a href="https://morepower.com.ph/monthly-rates/" target="_blank" class="text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors ml-2" title="View MORE Rates"><i class="fa-solid fa-external-link-alt"></i></a>
+                    </div>
+                    <input type="number" id="import-rate" value="14.42" step="0.01" class="w-full px-3 py-2 border border-red-300 bg-red-50 text-red-600 font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm h-[42px]">
+                    <div id="import-rate-subtext" class="text-[10px] text-slate-400 italic mt-1 font-medium">Rate for current billing period</div>
+                </div>
+                
+                <div class="flex flex-col space-y-2 w-full sm:w-auto min-w-[150px]">
+                    <div class="flex justify-between items-center h-5">
+                        <label class="block text-sm font-semibold text-emerald-600 truncate">Grid Export Credit (PHP)</label>
+                    </div>
+                    <input type="number" id="export-rate" value="7.56" step="0.01" class="w-full px-3 py-2 border border-emerald-300 bg-emerald-50 text-emerald-600 font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm h-[42px]">
+                    <div id="export-rate-subtext" class="text-[10px] text-slate-400 italic mt-1 font-medium">Rate for current billing period</div>
+                </div>
+                
+                <div class="flex flex-col space-y-2 w-full sm:w-auto justify-start">
+                    <div class="h-5 hidden sm:block"></div>
+                    <button id="manual-save-btn" class="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors flex items-center justify-center gap-2 h-[42px] shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Save
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MORE Calibration Accordion -->
+        <div class="bg-blue-50 rounded-xl shadow-sm border border-blue-100 p-5 transition-all duration-300">
+            <button id="toggle-calibration" class="w-full flex justify-between items-center text-left focus:outline-none">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-blue-500"></i>
+                    <h3 class="text-md font-bold text-slate-800">MORE Calibration</h3>
+                </div>
+                <i id="calibration-arrow" class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-300"></i>
+            </button>
+            
+            <div id="calibration-content" class="hidden mt-4 pt-4 border-t border-blue-200">
+                <p class="text-xs text-slate-500 mb-4">Align your dashboard with your actual MORE Power statement. (e.g. Current Amount: 6,688.05, Consumption: 464 kWh, Net Metering Rate: 7.5670, Total Credit: 1,823.66)</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+                    <div class="flex flex-col space-y-2">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase" title="Amount before Net Metering credits are deducted">Current Amount (PHP)</label>
+                        <input type="number" id="actual-bill-amount" placeholder="e.g. 6688.05" step="0.01" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm h-[42px] bg-white">
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase">Consumption (kWh)</label>
+                        <input type="number" id="actual-bill-kwh" placeholder="e.g. 464" step="0.1" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm h-[42px] bg-white">
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase">Effective Import Rate</label>
+                        <div id="effective-rate-display" class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-md text-sm font-bold text-slate-700 h-[42px] flex items-center">
+                            --
+                        </div>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase" title="Export credit rate from bill (Generation Charge)">Net Metering Rate (PHP)</label>
+                        <input type="number" id="actual-export-rate" placeholder="e.g. 7.5670" step="0.0001" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm h-[42px] bg-white">
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase" title="Actual total credit amount received on your bill statement">Total Credit (PHP)</label>
+                        <input type="number" id="actual-total-credit" placeholder="e.g. 1823.66" step="0.01" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm h-[42px] bg-white">
+                    </div>
+                    <div class="flex flex-col space-y-2 justify-end">
+                        <button id="apply-effective-rate-btn" class="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 h-[42px] shadow-sm">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Use Rates
+                        </button>
+                    </div>
+                </div>
+                <div id="calibration-feedback" class="mt-3 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md p-2.5 hidden items-center gap-2 transition-all">
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                    <span id="calibration-feedback-text"></span>
+                </div>
+                <div class="mt-3 text-[11px] text-blue-600 font-medium">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Note: For MORE Power, your Export Credit rate is typically equal to the "Generation Charge" rate on your bill (e.g. PHP 7.5670).
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="status-banner" class="hidden rounded-xl shadow-sm p-6 flex items-center justify-between transition-all duration-300">
+            <div>
+                <h2 id="status-title" class="text-2xl font-bold">Waiting for data...</h2>
+                <p id="status-subtitle" class="text-sm mt-1 opacity-90">Upload your plant data or sync your Google Sheet to see progress.</p>
+            </div>
+            <div id="status-icon" class="text-4xl opacity-80"></div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Production</div>
+                <div class="text-3xl font-bold text-amber-500" id="kpi-production">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-production-comp" class="hidden mt-2"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Consumption</div>
+                <div class="text-3xl font-bold text-red-500" id="kpi-consumption">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-consumption-comp" class="hidden mt-2"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Exported (Feed-in)</div>
+                <div class="text-3xl font-bold text-emerald-500" id="kpi-feedin">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-feedin-comp" class="hidden mt-2"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Imported (Purchased)</div>
+                <div class="text-3xl font-bold text-red-500" id="kpi-purchased">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-purchased-comp" class="hidden mt-2"></div>
+            </div>
+        </div>
+
+        <!-- Daily Performance Widgets -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Widget 1: Daily Import & Export -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-sm font-semibold text-slate-800">Latest Daily Flow</div>
+                        <div class="text-xs text-slate-400 font-medium" id="daily-date-label">--</div>
+                    </div>
+                    <div class="flex flex-col gap-3 mt-3">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Imported</span>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-red-600" id="daily-import-val">0.0 kWh</div>
+                                <div id="daily-import-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Exported</span>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-emerald-600" id="daily-export-val">0.0 kWh</div>
+                                <div id="daily-export-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Widget 2: Today's Production vs Yesterday -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-sm font-semibold text-slate-800">Today's Production</div>
+                        <div class="text-xs text-slate-400 font-medium" id="daily-prod-date-label">--</div>
+                    </div>
+                    <div class="flex flex-col gap-3 mt-3">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Today</span>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-amber-500" id="daily-prod-today">0.0 kWh</div>
+                                <div id="daily-prod-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Yesterday</span>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-amber-500" id="daily-prod-yesterday">0.0 kWh</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 3: Weather Forecast -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-sm font-semibold text-slate-800">Tomorrow's Forecast</div>
+                        <div class="text-xs text-slate-400 font-medium">Iloilo City</div>
+                    </div>
+                    <div class="flex items-center gap-3 mt-3" id="weather-forecast-container">
+                        <div class="text-3xl text-slate-300 animate-pulse"><i class="fa-solid fa-cloud-sun"></i></div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-slate-700">Loading forecast...</span>
+                            <span class="text-xs text-slate-500">Fetching local data</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Billing Analysis & Tabbed View -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <!-- Tabs Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 mb-5 gap-3">
+                <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <button id="tab-btn-estimated" class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-calculator"></i> Estimated Billing
+                    </button>
+                    <button id="tab-btn-actual" class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Actual Billing
+                    </button>
+                    <button id="tab-btn-compare" class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-scale-balanced"></i> Compare (Tracker vs Actual)
+                    </button>
+                </div>
+                <div id="billing-period-display" class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full w-fit">
+                    Period: --
+                </div>
+            </div>
+
+            <!-- TAB 1: Estimated Billing -->
+            <div id="tab-content-estimated" class="block space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center md:text-left">
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estimated Import Cost</div>
+                        <div class="text-xl font-bold text-slate-800 mt-1" id="fin-import">PHP 0.00</div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estimated Export Credit</div>
+                        <div class="text-xl font-bold text-emerald-600 mt-1" id="fin-export">PHP 0.00</div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Estimated Bill</div>
+                        <div class="text-2xl font-black mt-1" id="fin-net">PHP 0.00</div>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 italic">*Note: Calculated using inverter grid data and specified rates to offset Generation Charges via Net Metering.</p>
+            </div>
+
+            <!-- TAB 2: Actual Billing -->
+            <div id="tab-content-actual" class="hidden space-y-4">
+                <div id="actual-bill-empty" class="hidden bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-4 text-xs sm:text-sm flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-amber-500 text-base"></i>
+                        <span>No actual bill statement recorded for this period yet. Enter your statement details in <strong>MORE Calibration</strong> above.</span>
+                    </div>
+                </div>
+                <div id="actual-bill-data" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center md:text-left">
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Current Amount (Gross)</div>
+                        <div class="text-xl font-bold text-slate-800 mt-1" id="act-gross">PHP 0.00</div>
+                        <div class="text-[11px] text-slate-400 mt-1" id="act-kwh-sub">Billed: 0 kWh</div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Metering Export Credit</div>
+                        <div class="text-xl font-bold text-emerald-600 mt-1" id="act-export-credit">PHP 0.00</div>
+                        <div class="text-[11px] text-slate-400 mt-1" id="act-rate-sub">Rate: PHP 0.00/kWh</div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Actual Net Bill Amount</div>
+                        <div class="text-2xl font-black mt-1" id="act-net-bill">PHP 0.00</div>
+                        <div class="text-[11px] text-slate-400 mt-1" id="act-effective-sub">Effective Rate: --</div>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 italic">*Note: Reflects statement figures from your official MORE Power bill for this billing cycle.</p>
+            </div>
+
+            <!-- TAB 3: Compare (Tracker vs Actual) -->
+            <div id="tab-content-compare" class="hidden space-y-4">
+                <div id="compare-empty" class="hidden bg-slate-50 border border-slate-200 text-slate-600 rounded-lg p-4 text-xs sm:text-sm">
+                    Enter your actual bill details in the <strong>MORE Calibration</strong> accordion above to enable comparison analysis.
+                </div>
+                <div id="compare-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Column 1: Grid Import / Consumption -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b pb-1 mb-2">Imported Energy</div>
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="text-slate-600">Inverter Tracker:</span>
+                                <span class="font-semibold text-slate-800" id="cmp-track-import">0 kWh</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs mb-2">
+                                <span class="text-slate-600">MORE Power Meter:</span>
+                                <span class="font-semibold text-slate-800" id="cmp-act-import">0 kWh</span>
+                            </div>
+                        </div>
+                        <div id="cmp-import-diff" class="mt-2 pt-2 border-t border-slate-200 text-xs font-bold flex justify-between items-center">
+                            <span>Variance:</span>
+                            <span id="cmp-import-diff-val">0 kWh</span>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Export Credit -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b pb-1 mb-2">Export Credit</div>
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="text-slate-600">Estimated Credit:</span>
+                                <span class="font-semibold text-emerald-600" id="cmp-est-credit">PHP 0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs mb-2">
+                                <span class="text-slate-600">Actual Credit:</span>
+                                <span class="font-semibold text-emerald-600" id="cmp-act-credit">PHP 0.00</span>
+                            </div>
+                        </div>
+                        <div id="cmp-credit-diff" class="mt-2 pt-2 border-t border-slate-200 text-xs font-bold flex justify-between items-center">
+                            <span>Variance:</span>
+                            <span id="cmp-credit-diff-val">PHP 0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Net Bill Variance -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b pb-1 mb-2">Net Bill Amount</div>
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="text-slate-600">Estimated Net:</span>
+                                <span class="font-semibold" id="cmp-est-net">PHP 0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs mb-2">
+                                <span class="text-slate-600">Actual Net:</span>
+                                <span class="font-semibold" id="cmp-act-net">PHP 0.00</span>
+                            </div>
+                        </div>
+                        <div id="cmp-net-diff" class="mt-2 pt-2 border-t border-slate-200 text-xs font-bold flex justify-between items-center">
+                            <span>Variance:</span>
+                            <span id="cmp-net-diff-val">PHP 0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energy Chart Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Daily Energy Flows</h3>
+            <div class="relative h-80 w-full">
+                <canvas id="energyChart"></canvas>
+            </div>
+        </div>
+        
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        let firebaseConfig = {};
+        try { firebaseConfig = JSON.parse(firebaseConfigStr); } catch(e) {}
+        const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db = null, auth = null, userId = null;
+        let isSyncing = false;
+        let chartInstance = null;
+        let autoSyncInterval = null;
+        
+        const HARDCODED_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBTbrCtjdJDcsSo_0EAleck7ui-uCTJvogOEss3rHPvCazSE4QyfyAKMdBVvC3bD4TPVa9Pnkne961/pub?gid=1195862295&single=true&output=csv';
+
+        let appState = {
+            rates: { import: 14.42, export: 7.56 },
+            monthlyData: {},
+            historicalDaily: {},
+            activeMonth: null,
+            billingCycleDay: 23,
+            sheetUrl: HARDCODED_SHEET_URL,
+            lastSynced: null
+        };
+
+        if (Object.keys(firebaseConfig).length > 0) {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+            } catch(e) {
+                console.warn("Firebase init warning:", e);
+            }
+        }
+
+        const cloudStatus = document.getElementById('cloud-status');
+        const cloudStatusText = document.getElementById('cloud-status-text');
+
+        function updateCloudStatus(status) {
+            if (!cloudStatus) return;
+            cloudStatus.classList.remove('hidden');
+            cloudStatus.classList.add('flex');
+            cloudStatusText.textContent = status;
+            if (status === 'Saved' || status === 'Synced') {
+                setTimeout(() => {
+                    if (cloudStatusText) cloudStatusText.textContent = 'Cloud Synced';
+                }, 2000);
+            }
+        }
+
+        async function initCloud() {
+            if (!auth) {
+                loadLocalState();
+                return;
+            }
+            try {
+                if (initialToken) {
+                    await signInWithCustomToken(auth, initialToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser?.uid;
+                if (userId) {
+                    await loadDashboardState();
+                } else {
+                    loadLocalState();
+                }
+            } catch (err) {
+                console.error("Firebase auth error:", err);
+                loadLocalState();
+            }
+        }
+
+        function loadLocalState() {
+            const localState = localStorage.getItem('solarDashboardState');
+            if (localState) {
+                try {
+                    const parsed = JSON.parse(localState);
+                    if (parsed && parsed.historicalDaily) {
+                        appState = parsed;
+                        appState.sheetUrl = HARDCODED_SHEET_URL;
+                        updateUIFromState();
+                        rebuildMonthlyData();
+                        updateCloudStatus('Loaded Locally');
+                        syncGoogleSheet(appState.sheetUrl, true);
+                        setupAutoSyncInterval();
+                        return;
+                    }
+                } catch(e) {
+                    console.error("Local state parse error:", e);
+                }
+            }
+            appState.sheetUrl = HARDCODED_SHEET_URL;
+            syncGoogleSheet(appState.sheetUrl, true);
+            updateCloudStatus('Ready');
+            setupAutoSyncInterval();
+        }
+
+        function updateUIFromState() {
+            document.getElementById('import-rate').value = appState.rates?.import || 14.42;
+            document.getElementById('export-rate').value = appState.rates?.export || 7.56;
+            if (appState.billingCycleDay) {
+                document.getElementById('billing-cycle-day').value = appState.billingCycleDay;
+            }
+            if (appState.sheetUrl) {
+                document.getElementById('sheet-url').value = appState.sheetUrl;
+                updateSyncStatusDisplay();
+            }
+        }
+
+        async function loadDashboardState() {
+            const localState = localStorage.getItem('solarDashboardState');
+            if (localState) {
+                try {
+                    const parsed = JSON.parse(localState);
+                    if (parsed && parsed.historicalDaily) {
+                        appState = parsed;
+                        appState.sheetUrl = HARDCODED_SHEET_URL;
+                        updateUIFromState();
+                        rebuildMonthlyData();
+                    }
+                } catch (e) {
+                    console.error("Local state parsing error:", e);
+                }
+            }
+
+            if (!userId || !db) {
+                appState.sheetUrl = HARDCODED_SHEET_URL;
+                syncGoogleSheet(appState.sheetUrl, true);
+                updateCloudStatus(localState ? 'Loaded Locally' : 'Ready');
+                setupAutoSyncInterval();
+                return;
+            }
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'app_data', 'dashboard_state');
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.appState && data.appState.historicalDaily) {
+                        appState = data.appState;
+                        appState.sheetUrl = HARDCODED_SHEET_URL;
+                        updateUIFromState();
+                        rebuildMonthlyData();
+                    }
+                    updateCloudStatus('Restored');
+                } else {
+                    updateCloudStatus(localState ? 'Loaded Locally' : 'Ready');
+                }
+                
+                appState.sheetUrl = HARDCODED_SHEET_URL;
+                syncGoogleSheet(appState.sheetUrl, true);
+            } catch (error) {
+                console.error("Error loading state from cloud:", error);
+                updateCloudStatus(localState ? 'Loaded Locally' : 'Load Failed');
+            }
+            setupAutoSyncInterval();
+        }
+
+        function updateSyncStatusDisplay() {
+            const syncEl = document.getElementById('sync-status');
+            if (!syncEl) return;
+            
+            if (appState.lastSynced) {
+                const date = new Date(appState.lastSynced);
+                let latestDataDateStr = "N/A";
+                if (appState.historicalDaily) {
+                     const days = Object.keys(appState.historicalDaily).sort();
+                     if (days.length > 0) {
+                         const d = new Date(days[days.length - 1] + 'T00:00:00');
+                         latestDataDateStr = d.toLocaleDateString();
+                     }
+                }
+                syncEl.innerHTML = `<span class="text-emerald-600"><i class="fa-solid fa-check"></i> Last synced: ${date.toLocaleTimeString()}</span> (Latest: ${latestDataDateStr})`;
+            } else {
+                 syncEl.textContent = "Upload a file or sync a CSV link to begin.";
+            }
+        }
+
+        async function saveDashboardState() {
+            const currentImport = parseFloat(document.getElementById('import-rate').value) || 14.42;
+            const currentExport = parseFloat(document.getElementById('export-rate').value) || 7.56;
+            
+            appState.rates.import = currentImport;
+            appState.rates.export = currentExport;
+            appState.sheetUrl = HARDCODED_SHEET_URL;
+            
+            if (appState.activeMonth && appState.monthlyData[appState.activeMonth]) {
+                appState.monthlyData[appState.activeMonth].rates = { import: currentImport, export: currentExport };
+            }
+            
+            try {
+                localStorage.setItem('solarDashboardState', JSON.stringify(appState));
+            } catch(e) {
+                console.warn("Could not save to local storage", e);
+            }
+
+            if (!userId || !db || isSyncing) return;
+            isSyncing = true;
+            updateCloudStatus('Saving...');
+            
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'app_data', 'dashboard_state');
+                const payload = {
+                    appState: appState,
+                    updatedAt: new Date().toISOString()
+                };
+                await setDoc(docRef, payload);
+                updateCloudStatus('Saved');
+            } catch (error) {
+                console.error("Error saving state to cloud:", error);
+                updateCloudStatus('Saved Locally');
+            } finally {
+                isSyncing = false;
+            }
+        }
+
+        function processRawDataArray(allCombinedData) {
+            if (!allCombinedData || allCombinedData.length === 0) {
+                updateCloudStatus('Ready');
+                return;
+            }
+
+            const sampleKeys = Object.keys(allCombinedData[0]);
+            const sanitizeKey = (k) => k.toLowerCase().replace(/[\s\(\)（）]/g, '');
+            const sanitizedKeys = sampleKeys.map(sanitizeKey);
+
+            const getOriginalKey = (matchStrings) => {
+                const index = sanitizedKeys.findIndex(sk => matchStrings.some(match => sk.includes(match)));
+                return index !== -1 ? sampleKeys[index] : null;
+            };
+
+            const keyMap = {
+                date: getOriginalKey(['time', 'date']),
+                production: getOriginalKey(['production']),
+                consumption: getOriginalKey(['consumption']),
+                feedIn: getOriginalKey(['feed-in', 'feedin', 'export']),
+                purchased: getOriginalKey(['purchased', 'import', 'gridkw'])
+            };
+            
+            const newDailyData = {};
+            allCombinedData.forEach(row => {
+                const dateVal = row[keyMap.date];
+                if(!dateVal || dateVal === 'undefined') return;
+                
+                let dateStr = String(dateVal).trim();
+                if(dateStr.includes('/')) {
+                    dateStr = dateStr.replace(/\//g, '-');
+                }
+                const d = new Date(dateStr);
+                if(isNaN(d.getTime())) return;
+                
+                const dayKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                
+                if(!newDailyData[dayKey]) {
+                    newDailyData[dayKey] = { prod: 0, cons: 0, feedIn: 0, purc: 0 };
+                }
+                
+                newDailyData[dayKey].prod += parseFloat(row[keyMap.production]) || 0;
+                newDailyData[dayKey].cons += parseFloat(row[keyMap.consumption]) || 0;
+                newDailyData[dayKey].feedIn += parseFloat(row[keyMap.feedIn]) || 0;
+                newDailyData[dayKey].purc += parseFloat(row[keyMap.purchased]) || 0;
+            });
+
+            if (!appState.historicalDaily) appState.historicalDaily = {};
+            Object.assign(appState.historicalDaily, newDailyData);
+
+            rebuildMonthlyData();
+            updateCloudStatus('Ready');
+        }
+
+        async function syncGoogleSheet(url, silent = false) {
+            if (!url) return;
+            if (!silent) {
+                updateCloudStatus('Fetching Data...');
+                const syncEl = document.getElementById('sync-status');
+                if (syncEl) syncEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-500"></i> Fetching from web...`;
+            }
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const csvText = await response.text();
+                const workbook = XLSX.read(csvText, { type: 'string' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" });
+                
+                processRawDataArray(jsonData);
+                
+                appState.lastSynced = new Date().toISOString();
+                appState.sheetUrl = url;
+                updateSyncStatusDisplay();
+                saveDashboardState();
+                
+            } catch (err) {
+                console.error("Auto-Sync Error:", err);
+                if (!silent) {
+                    const syncEl = document.getElementById('sync-status');
+                    if (syncEl) syncEl.innerHTML = `<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation"></i> Sync Failed. Check CSV URL.</span>`;
+                    updateCloudStatus('Failed');
+                }
+            }
+        }
+
+        function setupAutoSyncInterval() {
+            if (autoSyncInterval) clearInterval(autoSyncInterval);
+            autoSyncInterval = setInterval(() => {
+                const url = document.getElementById('sheet-url')?.value || appState.sheetUrl;
+                if (url) {
+                    console.log("Running background sync...");
+                    syncGoogleSheet(url, true);
+                }
+            }, 10 * 60 * 1000); // Sync every 10 minutes
+        }
+
+        document.getElementById('sync-sheet-btn').addEventListener('click', () => {
+            const url = document.getElementById('sheet-url').value;
+            if (url) {
+                syncGoogleSheet(url);
+            } else {
+                 const syncEl = document.getElementById('sync-status');
+                 if(syncEl) syncEl.innerHTML = `<span class="text-amber-500"><i class="fa-solid fa-circle-exclamation"></i> Please enter a CSV URL first.</span>`;
+            }
+        });
+
+        document.getElementById('file-upload').addEventListener('change', async function(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            updateCloudStatus('Processing...');
+            let allCombinedData = [];
+
+            const readExcelFile = (file) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        try {
+                            const data = new Uint8Array(evt.target.result);
+                            const workbook = XLSX.read(data, {type: 'array'});
+                            const firstSheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[firstSheetName];
+                            const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" });
+                            resolve(jsonData);
+                        } catch (err) {
+                            reject(err);
+                        }
+                    };
+                    reader.onerror = () => reject(new Error("File reading failed"));
+                    reader.readAsArrayBuffer(file);
+                });
+            };
+
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    const fileData = await readExcelFile(files[i]);
+                    allCombinedData = allCombinedData.concat(fileData);
+                }
+            } catch (err) {
+                console.error("Parse Error:", err);
+                updateCloudStatus('Failed');
+                e.target.value = '';
+                return;
+            }
+
+            if (allCombinedData.length === 0) {
+                updateCloudStatus('Ready');
+                return;
+            }
+
+            processRawDataArray(allCombinedData);
+            e.target.value = '';
+        });
+
+        document.getElementById('import-rate').addEventListener('input', () => updateFinancials(true));
+        document.getElementById('export-rate').addEventListener('input', () => updateFinancials(true));
+        document.getElementById('manual-save-btn').addEventListener('click', () => saveDashboardState());
+        
+        document.getElementById('billing-cycle-day').addEventListener('change', (e) => {
+            let cycleDay = parseInt(e.target.value) || 23;
+            if(cycleDay < 1) cycleDay = 1;
+            if(cycleDay > 31) cycleDay = 31;
+            e.target.value = cycleDay;
+            
+            appState.billingCycleDay = cycleDay;
+            rebuildMonthlyData();
+        });
+
+        document.getElementById('month-selector').addEventListener('change', (e) => {
+            appState.activeMonth = e.target.value;
+            updateView();
+        });
+
+        document.getElementById('actual-bill-amount').addEventListener('input', () => calculateEffectiveRate(true));
+        document.getElementById('actual-bill-kwh').addEventListener('input', () => calculateEffectiveRate(true));
+        document.getElementById('actual-export-rate').addEventListener('input', () => calculateEffectiveRate(true));
+        document.getElementById('actual-total-credit').addEventListener('input', () => calculateEffectiveRate(true));
+        
+        document.getElementById('apply-effective-rate-btn').addEventListener('click', () => {
+            const bill = parseFloat(document.getElementById('actual-bill-amount').value);
+            const kwh = parseFloat(document.getElementById('actual-bill-kwh').value);
+            const exportRateVal = parseFloat(document.getElementById('actual-export-rate').value);
+
+            let updated = false;
+            let appliedImport = null;
+            let appliedExport = null;
+
+            if (!isNaN(bill) && !isNaN(kwh) && kwh > 0) {
+                appliedImport = bill / kwh;
+                document.getElementById('import-rate').value = appliedImport.toFixed(4);
+                updated = true;
+            }
+
+            if (!isNaN(exportRateVal) && exportRateVal > 0) {
+                appliedExport = exportRateVal;
+                document.getElementById('export-rate').value = appliedExport.toFixed(4);
+                updated = true;
+            }
+
+            if (updated) {
+                updateFinancials(true);
+
+                const cycleDay = appState.billingCycleDay || 23;
+                let periodText = 'current billing period';
+                if (appState.activeMonth) {
+                    const [yyyy, mm] = appState.activeMonth.split('-');
+                    const year = parseInt(yyyy);
+                    const month = parseInt(mm) - 1;
+                    const startDate = new Date(year, month, cycleDay);
+                    const endDate = new Date(year, month + 1, cycleDay - 1);
+                    periodText = `${startDate.toLocaleString('default', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleString('default', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+                }
+
+                const feedbackEl = document.getElementById('calibration-feedback');
+                const feedbackTextEl = document.getElementById('calibration-feedback-text');
+                if (feedbackEl && feedbackTextEl) {
+                    feedbackTextEl.textContent = `Updated Grid Import Rate (${appliedImport ? 'PHP ' + appliedImport.toFixed(4) : 'unchanged'}) and Export Rate (${appliedExport ? 'PHP ' + appliedExport.toFixed(4) : 'unchanged'}) for the billing period (${periodText}).`;
+                    feedbackEl.classList.remove('hidden');
+                    feedbackEl.classList.add('flex');
+                    
+                    setTimeout(() => {
+                        feedbackEl.classList.add('hidden');
+                        feedbackEl.classList.remove('flex');
+                    }, 6000);
+                }
+            }
+        });
+
+        // Toggle Calibration Accordion
+        document.getElementById('toggle-calibration').addEventListener('click', () => {
+            const content = document.getElementById('calibration-content');
+            const arrow = document.getElementById('calibration-arrow');
+            content.classList.toggle('hidden');
+            if (content.classList.contains('hidden')) {
+                arrow.classList.remove('rotate-180');
+            } else {
+                arrow.classList.add('rotate-180');
+            }
+        });
+
+        // Billing Tabs Navigation
+        const tabBtnEst = document.getElementById('tab-btn-estimated');
+        const tabBtnAct = document.getElementById('tab-btn-actual');
+        const tabBtnCmp = document.getElementById('tab-btn-compare');
+
+        const tabContentEst = document.getElementById('tab-content-estimated');
+        const tabContentAct = document.getElementById('tab-content-actual');
+        const tabContentCmp = document.getElementById('tab-content-compare');
+
+        function switchBillingTab(activeTab) {
+            [tabBtnEst, tabBtnAct, tabBtnCmp].forEach(btn => {
+                if (!btn) return;
+                btn.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center gap-2";
+            });
+            [tabContentEst, tabContentAct, tabContentCmp].forEach(cnt => cnt?.classList.add('hidden'));
+
+            if (activeTab === 'estimated') {
+                tabBtnEst.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-2";
+                tabContentEst.classList.remove('hidden');
+            } else if (activeTab === 'actual') {
+                tabBtnAct.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-2";
+                tabContentAct.classList.remove('hidden');
+            } else if (activeTab === 'compare') {
+                tabBtnCmp.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-2";
+                tabContentCmp.classList.remove('hidden');
+            }
+        }
+
+        tabBtnEst?.addEventListener('click', () => switchBillingTab('estimated'));
+        tabBtnAct?.addEventListener('click', () => switchBillingTab('actual'));
+        tabBtnCmp?.addEventListener('click', () => switchBillingTab('compare'));
+
+        function getPreviousMonthKey(monthKey) {
+            if (!monthKey || monthKey === 'Legacy') return null;
+            const [yyyy, mm] = monthKey.split('-');
+            let year = parseInt(yyyy);
+            let month = parseInt(mm) - 1;
+            if(month === 0) {
+                month = 12;
+                year--;
+            }
+            return `${year}-${String(month).padStart(2, '0')}`;
+        }
+
+        function rebuildMonthlyData() {
+            const bannerEl = document.getElementById('status-banner');
+            const bannerTitle = document.getElementById('status-title');
+            const bannerSub = document.getElementById('status-subtitle');
+            const bannerIcon = document.getElementById('status-icon');
+
+            if (!appState.historicalDaily || Object.keys(appState.historicalDaily).length === 0) {
+                bannerEl.classList.remove('hidden', 'bg-emerald-500', 'bg-red-500', 'text-white');
+                bannerEl.classList.add('bg-amber-500', 'text-white');
+                bannerTitle.textContent = "No Data Found";
+                bannerSub.textContent = "Upload your plant data or sync a Google Sheet to begin.";
+                bannerIcon.innerHTML = '<i class="fa-solid fa-file-circle-xmark"></i>';
+                return;
+            }
+
+            const cycleDay = appState.billingCycleDay || 23;
+            const oldMonthlyData = appState.monthlyData || {};
+            appState.monthlyData = {};
+
+            const days = Object.keys(appState.historicalDaily).sort();
+            
+            days.forEach(dayKey => {
+                const d = new Date(dayKey + 'T00:00:00');
+                let cycleMonth = d.getMonth();
+                let cycleYear = d.getFullYear();
+                
+                if (d.getDate() < cycleDay) {
+                    cycleMonth--;
+                    if (cycleMonth < 0) { cycleMonth = 11; cycleYear--; }
+                }
+                
+                const monthKey = `${cycleYear}-${String(cycleMonth+1).padStart(2, '0')}`;
+                
+                if (!appState.monthlyData[monthKey]) {
+                    appState.monthlyData[monthKey] = {
+                        totals: { production: 0, consumption: 0, feedIn: 0, purchased: 0 },
+                        chartData: { rawDays: [] },
+                        rates: oldMonthlyData[monthKey]?.rates || null,
+                        actuals: oldMonthlyData[monthKey]?.actuals || { bill: '', kwh: '', exportRate: '', totalCredit: '' }
+                    };
+                }
+                
+                const dayData = appState.historicalDaily[dayKey];
+                const md = appState.monthlyData[monthKey];
+                
+                md.totals.production += dayData.prod;
+                md.totals.consumption += dayData.cons;
+                md.totals.feedIn += dayData.feedIn;
+                md.totals.purchased += dayData.purc;
+                
+                md.chartData.rawDays.push({
+                    dateObj: d,
+                    label: `${d.getMonth()+1}/${d.getDate()}`,
+                    prod: dayData.prod,
+                    cons: dayData.cons,
+                    feedIn: dayData.feedIn,
+                    purc: dayData.purc
+                });
+            });
+
+            // Chronological rate inheritance: Carry forward rates from previous months if no explicit rate was set
+            const chronologicalMonths = Object.keys(appState.monthlyData).sort();
+            let runningRates = { import: appState.rates?.import || 14.42, export: appState.rates?.export || 7.56 };
+
+            chronologicalMonths.forEach(mKey => {
+                const md = appState.monthlyData[mKey];
+                if (md.rates && (md.rates.explicit || md.rates.import)) {
+                    runningRates = { ...md.rates };
+                } else {
+                    md.rates = { ...runningRates };
+                }
+            });
+            
+            Object.keys(appState.monthlyData).forEach(mKey => {
+                const md = appState.monthlyData[mKey];
+                md.chartData.rawDays.sort((a,b) => a.dateObj - b.dateObj);
+                
+                md.chartData.labels = md.chartData.rawDays.map(item => item.label);
+                md.chartData.prod = md.chartData.rawDays.map(item => item.prod);
+                md.chartData.cons = md.chartData.rawDays.map(item => item.cons);
+                md.chartData.feedIn = md.chartData.rawDays.map(item => item.feedIn);
+                md.chartData.purc = md.chartData.rawDays.map(item => item.purc);
+            });
+            
+            const sortedMonths = Object.keys(appState.monthlyData).sort();
+            if(sortedMonths.length > 0 && (!appState.activeMonth || !appState.monthlyData[appState.activeMonth])) {
+                appState.activeMonth = sortedMonths[sortedMonths.length - 1];
+            }
+            
+            updateView();
+            saveDashboardState();
+        }
+
+        function updateView() {
+            if (Object.keys(appState.monthlyData).length === 0) return;
+
+            const cycleDay = appState.billingCycleDay || 23;
+            const sortedMonths = Object.keys(appState.monthlyData).sort((a,b) => b.localeCompare(a));
+            const monthSelector = document.getElementById('month-selector');
+            const container = document.getElementById('month-selector-container');
+            
+            container.classList.remove('hidden');
+            monthSelector.innerHTML = '';
+            
+            sortedMonths.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                const [yyyy, mm] = m.split('-');
+                const year = parseInt(yyyy);
+                const month = parseInt(mm) - 1;
+                
+                const startDate = new Date(year, month, cycleDay);
+                const endDate = new Date(year, month + 1, cycleDay - 1);
+                opt.textContent = `${startDate.toLocaleString('default', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleString('default', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+                
+                if (m === appState.activeMonth) opt.selected = true;
+                monthSelector.appendChild(opt);
+            });
+
+            const activeData = appState.monthlyData[appState.activeMonth];
+            if (!activeData) return;
+            const prevMonthKey = getPreviousMonthKey(appState.activeMonth);
+            const prevData = appState.monthlyData[prevMonthKey];
+
+            const currentRates = activeData.rates || appState.rates || { import: 14.42, export: 7.56 };
+            document.getElementById('import-rate').value = currentRates.import;
+            document.getElementById('export-rate').value = currentRates.export;
+
+            let periodText = 'current billing period';
+            if (appState.activeMonth) {
+                const [yyyy, mm] = appState.activeMonth.split('-');
+                const year = parseInt(yyyy);
+                const month = parseInt(mm) - 1;
+                const startDate = new Date(year, month, cycleDay);
+                const endDate = new Date(year, month + 1, cycleDay - 1);
+                periodText = `${startDate.toLocaleString('default', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleString('default', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+            }
+            
+            document.getElementById('import-rate-subtext').textContent = `Rate for ${periodText}`;
+            document.getElementById('export-rate-subtext').textContent = `Rate for ${periodText}`;
+            const periodDisplay = document.getElementById('billing-period-display');
+            if (periodDisplay) periodDisplay.textContent = `Period: ${periodText}`;
+
+            updateKPIs(activeData.totals, prevData ? prevData.totals : null);
+            updateFinancials();
+            renderChart(activeData.chartData.labels, activeData.chartData.prod, activeData.chartData.cons, activeData.chartData.feedIn, activeData.chartData.purc);
+            
+            const actuals = activeData.actuals || { bill: '', kwh: '', exportRate: '', totalCredit: '' };
+            document.getElementById('actual-bill-amount').value = actuals.bill !== undefined ? actuals.bill : '';
+            document.getElementById('actual-bill-kwh').value = actuals.kwh !== undefined ? actuals.kwh : '';
+            document.getElementById('actual-export-rate').value = actuals.exportRate !== undefined ? actuals.exportRate : (currentRates.export || 7.56);
+            document.getElementById('actual-total-credit').value = actuals.totalCredit !== undefined ? actuals.totalCredit : '';
+            calculateEffectiveRate(false);
+
+            updateDailyWidgets();
+        }
+
+        function updateDailyWidgets() {
+            if (!appState.historicalDaily) return;
+            const days = Object.keys(appState.historicalDaily).sort();
+            if (days.length === 0) return;
+
+            const latestDay = days[days.length - 1];
+            let previousDay = null;
+            
+            const latestDate = new Date(latestDay + 'T00:00:00');
+            const expectedPrevDate = new Date(latestDate);
+            expectedPrevDate.setDate(latestDate.getDate() - 1);
+            const expectedPrevKey = `${expectedPrevDate.getFullYear()}-${String(expectedPrevDate.getMonth()+1).padStart(2, '0')}-${String(expectedPrevDate.getDate()).padStart(2, '0')}`;
+            
+            if (appState.historicalDaily[expectedPrevKey]) {
+                previousDay = expectedPrevKey;
+            } else if (days.length > 1) {
+                previousDay = days[days.length - 2];
+            }
+
+            const todayData = appState.historicalDaily[latestDay];
+            const yesterdayData = previousDay ? appState.historicalDaily[previousDay] : null;
+
+            document.getElementById('daily-date-label').textContent = 'For ' + latestDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('daily-prod-date-label').textContent = 'For ' + latestDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            
+            document.getElementById('daily-import-val').textContent = todayData.purc.toFixed(1) + ' kWh';
+            document.getElementById('daily-export-val').textContent = todayData.feedIn.toFixed(1) + ' kWh';
+            
+            // Import Comparison vs Yesterday
+            const impCompEl = document.getElementById('daily-import-comp');
+            if (yesterdayData && yesterdayData.purc > 0) {
+                const diff = todayData.purc - yesterdayData.purc;
+                const pct = (diff / yesterdayData.purc) * 100;
+                const isUp = diff >= 0;
+                const colorClass = isUp ? 'text-red-500' : 'text-emerald-500';
+                const icon = isUp ? 'fa-arrow-up' : 'fa-arrow-down';
+                impCompEl.innerHTML = `<i class="fa-solid ${icon}"></i> ${Math.abs(pct).toFixed(1)}% vs yesterday`;
+                impCompEl.className = `text-[10px] font-semibold mt-0.5 ${colorClass} block`;
+            } else {
+                impCompEl.className = 'hidden';
+            }
+
+            // Export Comparison vs Yesterday
+            const expCompEl = document.getElementById('daily-export-comp');
+            if (yesterdayData && yesterdayData.feedIn > 0) {
+                const diff = todayData.feedIn - yesterdayData.feedIn;
+                const pct = (diff / yesterdayData.feedIn) * 100;
+                const isUp = diff >= 0;
+                const colorClass = isUp ? 'text-emerald-500' : 'text-red-500';
+                const icon = isUp ? 'fa-arrow-up' : 'fa-arrow-down';
+                expCompEl.innerHTML = `<i class="fa-solid ${icon}"></i> ${Math.abs(pct).toFixed(1)}% vs yesterday`;
+                expCompEl.className = `text-[10px] font-semibold mt-0.5 ${colorClass} block`;
+            } else {
+                expCompEl.className = 'hidden';
+            }
+
+            // Today's Production vs Yesterday
+            document.getElementById('daily-prod-today').textContent = todayData.prod.toFixed(1) + ' kWh';
+            
+            const prodCompEl = document.getElementById('daily-prod-comp');
+            if (yesterdayData && yesterdayData.prod > 0) {
+                const diff = todayData.prod - yesterdayData.prod;
+                const pct = (diff / yesterdayData.prod) * 100;
+                const isUp = diff >= 0;
+                const colorClass = isUp ? 'text-emerald-500' : 'text-red-500';
+                const icon = isUp ? 'fa-arrow-up' : 'fa-arrow-down';
+                const prevDate = new Date(previousDay + 'T00:00:00');
+                const prevDateStr = prevDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                prodCompEl.innerHTML = `<i class="fa-solid ${icon}"></i> ${Math.abs(pct).toFixed(1)}% vs ${prevDateStr} (${yesterdayData.prod.toFixed(1)} kWh)`;
+                prodCompEl.className = `text-[10px] font-semibold mt-0.5 ${colorClass} block`;
+            } else {
+                prodCompEl.className = 'hidden';
+            }
+
+            if (yesterdayData) {
+                document.getElementById('daily-prod-yesterday').textContent = yesterdayData.prod.toFixed(1) + ' kWh';
+            } else {
+                document.getElementById('daily-prod-yesterday').textContent = '0.0 kWh';
+            }
+
+            fetchWeatherForecast();
+        }
+
+        async function fetchWeatherForecast() {
+            const container = document.getElementById('weather-forecast-container');
+            if (!container) return;
+
+            try {
+                // Iloilo City coordinates: 10.7202 N, 122.5621 E
+                const url = 'https://api.open-meteo.com/v1/forecast?latitude=10.7202&longitude=122.5621&daily=weathercode,shortwave_radiation_sum&timezone=Asia%2FManila&forecast_days=2';
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Weather API error');
+                const data = await res.json();
+
+                if (data && data.daily && data.daily.weathercode && data.daily.weathercode.length > 1) {
+                    const tomCode = data.daily.weathercode[1];
+                    const tomRad = data.daily.shortwave_radiation_sum ? data.daily.shortwave_radiation_sum[1] : 18;
+                    
+                    const weatherMeta = getWeatherMeta(tomCode);
+                    
+                    let maxHistProd = 35;
+                    if (appState.historicalDaily) {
+                        const prods = Object.values(appState.historicalDaily).map(d => d.prod).filter(p => p > 0);
+                        if (prods.length > 0) maxHistProd = Math.max(...prods);
+                    }
+                    
+                    const radFactor = Math.min(Math.max(tomRad / 22, 0.3), 1.1);
+                    const estProd = (maxHistProd * radFactor).toFixed(1);
+
+                    container.innerHTML = `
+                        <div class="text-3xl ${weatherMeta.color}">${weatherMeta.icon}</div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-slate-800">${weatherMeta.condition}</span>
+                            <span class="text-xs text-slate-500 font-medium">Est: <strong class="text-amber-500">~${estProd} kWh</strong> (${weatherMeta.potential})</span>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Invalid weather data');
+                }
+            } catch (err) {
+                console.warn("Weather fetch failed, using fallback:", err);
+                container.innerHTML = `
+                    <div class="text-3xl text-amber-500"><i class="fa-solid fa-cloud-sun"></i></div>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-800">Partly Cloudy</span>
+                        <span class="text-xs text-slate-500 font-medium">Est: <strong class="text-amber-500">~28.5 kWh</strong> (Moderate)</span>
+                    </div>
+                `;
+            }
+        }
+
+        function getWeatherMeta(code) {
+            if (code === 0) return { condition: 'Clear Sky', potential: 'Excellent', icon: '<i class="fa-solid fa-sun text-amber-500"></i>', color: 'text-amber-500' };
+            if (code === 1 || code === 2) return { condition: 'Mainly Clear', potential: 'High', icon: '<i class="fa-solid fa-cloud-sun text-amber-400"></i>', color: 'text-amber-400' };
+            if (code === 3) return { condition: 'Overcast', potential: 'Moderate', icon: '<i class="fa-solid fa-cloud text-slate-400"></i>', color: 'text-slate-400' };
+            if (code >= 45 && code <= 48) return { condition: 'Foggy', potential: 'Low', icon: '<i class="fa-solid fa-smog text-slate-400"></i>', color: 'text-slate-400' };
+            if (code >= 51 && code <= 67) return { condition: 'Drizzle / Light Rain', potential: 'Low', icon: '<i class="fa-solid fa-cloud-rain text-blue-400"></i>', color: 'text-blue-400' };
+            if (code >= 71 && code <= 77) return { condition: 'Snow', potential: 'Low', icon: '<i class="fa-solid fa-snowflake text-blue-300"></i>', color: 'text-blue-300' };
+            if (code >= 80 && code <= 82) return { condition: 'Rain Showers', potential: 'Moderate', icon: '<i class="fa-solid fa-cloud-showers-heavy text-blue-500"></i>', color: 'text-blue-500' };
+            if (code >= 95) return { condition: 'Thunderstorms', potential: 'Moderate', icon: '<i class="fa-solid fa-cloud-bolt text-indigo-500"></i>', color: 'text-indigo-500' };
+            return { condition: 'Partly Cloudy', potential: 'Moderate', icon: '<i class="fa-solid fa-cloud-sun text-amber-400"></i>', color: 'text-amber-400' };
+        }
+
+        function updateKPIs(currentTotals, prevTotals) {
+            document.getElementById('kpi-production').innerHTML = `${currentTotals.production.toFixed(1)} <span class="text-sm font-normal text-slate-400">kWh</span>`;
+            document.getElementById('kpi-consumption').innerHTML = `${currentTotals.consumption.toFixed(1)} <span class="text-sm font-normal text-slate-400">kWh</span>`;
+            document.getElementById('kpi-feedin').innerHTML = `${currentTotals.feedIn.toFixed(1)} <span class="text-sm font-normal text-slate-400">kWh</span>`;
+            document.getElementById('kpi-purchased').innerHTML = `${currentTotals.purchased.toFixed(1)} <span class="text-sm font-normal text-slate-400">kWh</span>`;
+
+            renderKPIComparison('kpi-production-comp', currentTotals.production, prevTotals?.production, true);
+            renderKPIComparison('kpi-consumption-comp', currentTotals.consumption, prevTotals?.consumption, false);
+            renderKPIComparison('kpi-feedin-comp', currentTotals.feedIn, prevTotals?.feedIn, true);
+            renderKPIComparison('kpi-purchased-comp', currentTotals.purchased, prevTotals?.purchased, false);
+        }
+
+        function renderKPIComparison(elementId, current, previous, isHighGood) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            
+            if (previous === undefined || previous === null || previous === 0) {
+                el.classList.add('hidden');
+                return;
+            }
+
+            const pctChange = ((current - previous) / previous) * 100;
+            const isUp = pctChange >= 0;
+            const icon = isUp ? 'fa-arrow-up' : 'fa-arrow-down';
+            
+            let colorClass = '';
+            if (isHighGood) {
+                colorClass = isUp ? 'text-emerald-600' : 'text-red-600';
+            } else {
+                colorClass = isUp ? 'text-red-600' : 'text-emerald-600';
+            }
+
+            el.innerHTML = `<span class="${colorClass} text-xs font-semibold flex items-center gap-1"><i class="fa-solid ${icon}"></i> ${Math.abs(pctChange).toFixed(1)}% vs last month</span>`;
+            el.classList.remove('hidden');
+        }
+
+        function updateFinancials(triggerSave = false) {
+            if (!appState.activeMonth || !appState.monthlyData[appState.activeMonth]) return;
+            const activeData = appState.monthlyData[appState.activeMonth];
+            const totals = activeData.totals;
+            if (totals.production === 0) return;
+
+            const importRate = parseFloat(document.getElementById('import-rate').value) || 14.42;
+            const exportRate = parseFloat(document.getElementById('export-rate').value) || 7.56;
+
+            if (triggerSave) {
+                activeData.rates = { import: importRate, export: exportRate, explicit: true };
+                appState.rates = { import: importRate, export: exportRate };
+
+                // Forward propagate updated rates as baseline to any subsequent months that haven't been custom calibrated
+                const sortedMonths = Object.keys(appState.monthlyData).sort();
+                const activeIdx = sortedMonths.indexOf(appState.activeMonth);
+                if (activeIdx !== -1) {
+                    for (let i = activeIdx + 1; i < sortedMonths.length; i++) {
+                        const nextKey = sortedMonths[i];
+                        if (!appState.monthlyData[nextKey].rates?.explicit) {
+                            appState.monthlyData[nextKey].rates = { import: importRate, export: exportRate };
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            const importCost = totals.purchased * importRate;
+            const exportCredit = totals.feedIn * exportRate;
+            const netBill = importCost - exportCredit;
+
+            document.getElementById('fin-import').textContent = `PHP ${importCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('fin-export').textContent = `PHP ${exportCredit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            
+            const finNetEl = document.getElementById('fin-net');
+            const bannerEl = document.getElementById('status-banner');
+            const bannerTitle = document.getElementById('status-title');
+            const bannerSub = document.getElementById('status-subtitle');
+            const bannerIcon = document.getElementById('status-icon');
+
+            bannerEl.classList.remove('hidden', 'bg-emerald-500', 'bg-red-500', 'bg-amber-500', 'text-white');
+
+            if (netBill <= 0) {
+                finNetEl.textContent = `- PHP ${Math.abs(netBill).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                finNetEl.className = "text-2xl font-black mt-1 text-emerald-600";
+                
+                bannerEl.classList.add('bg-emerald-500', 'text-white');
+                bannerTitle.textContent = "On Track for Zero Billing! 🎉";
+                bannerSub.textContent = "Your solar export credits are successfully covering your grid consumption.";
+                bannerIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else {
+                finNetEl.textContent = `PHP ${netBill.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                finNetEl.className = "text-2xl font-black mt-1 text-red-600";
+                
+                bannerEl.classList.add('bg-red-500', 'text-white');
+                bannerTitle.textContent = "Attention: Bill Expected ⚠️";
+                bannerSub.textContent = "Your consumption is currently outpacing your export credits.";
+                bannerIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            }
+
+            // Actual Bill Data calculation
+            const actuals = activeData.actuals || {};
+            const actBill = parseFloat(actuals.bill);
+            const actKwh = parseFloat(actuals.kwh);
+            const actExpRate = parseFloat(actuals.exportRate) || exportRate;
+            const actUserCredit = parseFloat(actuals.totalCredit);
+
+            const hasActuals = !isNaN(actBill) && !isNaN(actKwh) && actKwh > 0;
+
+            const emptyActEl = document.getElementById('actual-bill-empty');
+            const dataActEl = document.getElementById('actual-bill-data');
+            const emptyCmpEl = document.getElementById('compare-empty');
+            const gridCmpEl = document.getElementById('compare-grid');
+
+            if (hasActuals) {
+                const actExportCredit = !isNaN(actUserCredit) ? actUserCredit : (totals.feedIn * actExpRate);
+                const actNet = actBill - actExportCredit;
+                const effRate = actBill / actKwh;
+
+                document.getElementById('act-gross').textContent = `PHP ${actBill.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('act-kwh-sub').textContent = `Billed: ${actKwh.toLocaleString()} kWh`;
+                document.getElementById('act-export-credit').textContent = `PHP ${actExportCredit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('act-rate-sub').textContent = !isNaN(actUserCredit) ? `Billed Credit Amount` : `Rate: PHP ${actExpRate.toFixed(4)}/kWh`;
+                
+                const actNetEl = document.getElementById('act-net-bill');
+                actNetEl.textContent = `${actNet <= 0 ? '- ' : ''}PHP ${Math.abs(actNet).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                actNetEl.className = `text-2xl font-black mt-1 ${actNet <= 0 ? 'text-emerald-600' : 'text-red-600'}`;
+                document.getElementById('act-effective-sub').textContent = `Effective Rate: PHP ${effRate.toFixed(4)}/kWh`;
+
+                emptyActEl.classList.add('hidden');
+                dataActEl.classList.remove('hidden');
+
+                // Compare Tab
+                document.getElementById('cmp-track-import').textContent = `${totals.purchased.toFixed(1)} kWh`;
+                document.getElementById('cmp-act-import').textContent = `${actKwh.toFixed(1)} kWh`;
+                const impDiff = totals.purchased - actKwh;
+                const impDiffEl = document.getElementById('cmp-import-diff-val');
+                impDiffEl.textContent = `${impDiff >= 0 ? '+' : ''}${impDiff.toFixed(1)} kWh (${Math.abs((impDiff / actKwh) * 100).toFixed(1)}%)`;
+                impDiffEl.className = impDiff > 0 ? 'text-red-600' : 'text-emerald-600';
+
+                document.getElementById('cmp-est-credit').textContent = `PHP ${exportCredit.toFixed(2)}`;
+                document.getElementById('cmp-act-credit').textContent = `PHP ${actExportCredit.toFixed(2)}`;
+                const credDiff = exportCredit - actExportCredit;
+                const credDiffEl = document.getElementById('cmp-credit-diff-val');
+                credDiffEl.textContent = `${credDiff >= 0 ? '+' : ''}PHP ${credDiff.toFixed(2)}`;
+                credDiffEl.className = credDiff >= 0 ? 'text-emerald-600' : 'text-red-600';
+
+                document.getElementById('cmp-est-net').textContent = `${netBill <= 0 ? '- ' : ''}PHP ${Math.abs(netBill).toFixed(2)}`;
+                document.getElementById('cmp-act-net').textContent = `${actNet <= 0 ? '- ' : ''}PHP ${Math.abs(actNet).toFixed(2)}`;
+                const netDiff = netBill - actNet;
+                const netDiffEl = document.getElementById('cmp-net-diff-val');
+                netDiffEl.textContent = `${netDiff >= 0 ? '+' : ''}PHP ${netDiff.toFixed(2)}`;
+                netDiffEl.className = netDiff <= 0 ? 'text-emerald-600' : 'text-red-600';
+
+                emptyCmpEl.classList.add('hidden');
+                gridCmpEl.classList.remove('hidden');
+            } else {
+                emptyActEl.classList.remove('hidden');
+                dataActEl.classList.add('hidden');
+                emptyCmpEl.classList.remove('hidden');
+                gridCmpEl.classList.add('hidden');
+            }
+
+            if (triggerSave) {
+                saveDashboardState();
+            }
+        }
+
+        function calculateEffectiveRate(saveToState = false) {
+            const bill = parseFloat(document.getElementById('actual-bill-amount').value);
+            const kwh = parseFloat(document.getElementById('actual-bill-kwh').value);
+            const exportRateVal = parseFloat(document.getElementById('actual-export-rate').value);
+            const totalCreditVal = parseFloat(document.getElementById('actual-total-credit').value);
+            const displayEl = document.getElementById('effective-rate-display');
+
+            if (!isNaN(bill) && !isNaN(kwh) && kwh > 0) {
+                const effRate = bill / kwh;
+                displayEl.textContent = `PHP ${effRate.toFixed(4)} / kWh`;
+                displayEl.className = "w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm font-bold text-blue-700 h-[42px] flex items-center";
+            } else {
+                displayEl.textContent = "--";
+                displayEl.className = "w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-md text-sm font-bold text-slate-700 h-[42px] flex items-center";
+            }
+
+            if (saveToState && appState.activeMonth && appState.monthlyData[appState.activeMonth]) {
+                if (!appState.monthlyData[appState.activeMonth].actuals) {
+                    appState.monthlyData[appState.activeMonth].actuals = {};
+                }
+                appState.monthlyData[appState.activeMonth].actuals.bill = isNaN(bill) ? '' : bill;
+                appState.monthlyData[appState.activeMonth].actuals.kwh = isNaN(kwh) ? '' : kwh;
+                appState.monthlyData[appState.activeMonth].actuals.exportRate = isNaN(exportRateVal) ? '' : exportRateVal;
+                appState.monthlyData[appState.activeMonth].actuals.totalCredit = isNaN(totalCreditVal) ? '' : totalCreditVal;
+                
+                updateFinancials(false);
+                saveDashboardState();
+            }
+        }
+
+        function renderChart(labels, prod, cons, feedIn, purc) {
+            const ctx = document.getElementById('energyChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Production (kWh)',
+                            data: prod,
+                            backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                            borderColor: 'rgb(245, 158, 11)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Consumption (kWh)',
+                            data: cons,
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: 'rgb(239, 68, 68)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Exported/Feed-in (kWh)',
+                            data: feedIn,
+                            type: 'line',
+                            backgroundColor: 'rgb(16, 185, 129)',
+                            borderColor: 'rgb(16, 185, 129)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 3
+                        },
+                        {
+                            label: 'Imported/Purchased (kWh)',
+                            data: purc,
+                            type: 'line',
+                            backgroundColor: 'rgb(239, 68, 68)',
+                            borderColor: 'rgb(239, 68, 68)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Energy (kWh)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        initCloud();
+    </script>
+</body>
+</html>
