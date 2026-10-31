@@ -712,13 +712,15 @@
 
         function setupAutoSyncInterval() {
             if (autoSyncInterval) clearInterval(autoSyncInterval);
+            // 6 hours = 21,600,000 ms (4 times per day)
+            const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
             autoSyncInterval = setInterval(() => {
                 const url = document.getElementById('sheet-url')?.value || appState.sheetUrl;
                 if (url) {
-                    console.log("Running background sync...");
+                    console.log("Running background auto-sync (4x daily schedule)...");
                     syncGoogleSheet(url, true);
                 }
-            }, 10 * 60 * 1000); // Sync every 10 minutes
+            }, SIX_HOURS_MS);
         }
 
         document.getElementById('sync-sheet-btn').addEventListener('click', () => {
