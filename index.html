@@ -100,101 +100,6 @@
             </div>
         </div>
 
-        <!-- KPI Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div class="text-sm font-semibold text-slate-500 mb-1">Total Production</div>
-                <div class="text-3xl font-bold text-amber-500" id="kpi-production">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
-                <div id="kpi-production-comp" class="hidden mt-2"></div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div class="text-sm font-semibold text-slate-500 mb-1">Total Consumption</div>
-                <div class="text-3xl font-bold text-red-500" id="kpi-consumption">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
-                <div id="kpi-consumption-comp" class="hidden mt-2"></div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div class="text-sm font-semibold text-slate-500 mb-1">Total Exported (Feed-in)</div>
-                <div class="text-3xl font-bold text-emerald-500" id="kpi-feedin">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
-                <div id="kpi-feedin-comp" class="hidden mt-2"></div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div class="text-sm font-semibold text-slate-500 mb-1">Total Imported (Purchased)</div>
-                <div class="text-3xl font-bold text-red-500" id="kpi-purchased">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
-                <div id="kpi-purchased-comp" class="hidden mt-2"></div>
-            </div>
-        </div>
-
-        <!-- Daily Performance Widgets -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Widget 1: Daily Import & Export -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="text-sm font-semibold text-slate-800">Latest Daily Flow</div>
-                        <div class="text-xs text-slate-400 font-medium" id="daily-date-label">--</div>
-                    </div>
-                    <div class="flex flex-col gap-3 mt-3">
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                            <span class="text-xs font-semibold text-slate-500 uppercase">Imported</span>
-                            <div class="text-right">
-                                <div class="text-2xl font-bold text-red-600" id="daily-import-val">0.0 kWh</div>
-                                <div id="daily-import-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center pt-1">
-                            <span class="text-xs font-semibold text-slate-500 uppercase">Exported</span>
-                            <div class="text-right">
-                                <div class="text-2xl font-bold text-emerald-600" id="daily-export-val">0.0 kWh</div>
-                                <div id="daily-export-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Widget 2: Today's Production vs Yesterday -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="text-sm font-semibold text-slate-800">Today's Production</div>
-                        <div class="text-xs text-slate-400 font-medium" id="daily-prod-date-label">--</div>
-                    </div>
-                    <div class="flex flex-col gap-3 mt-3">
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                            <span class="text-xs font-semibold text-slate-500 uppercase">Today</span>
-                            <div class="text-right">
-                                <div class="text-2xl font-bold text-amber-500" id="daily-prod-today">0.0 kWh</div>
-                                <div id="daily-prod-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center pt-1">
-                            <span class="text-xs font-semibold text-slate-500 uppercase">Yesterday</span>
-                            <div class="text-right">
-                                <div class="text-2xl font-bold text-amber-500" id="daily-prod-yesterday">0.0 kWh</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Widget 3: Weather Forecast -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="text-sm font-semibold text-slate-800">Tomorrow's Forecast</div>
-                        <div class="text-xs text-slate-400 font-medium">Iloilo City</div>
-                    </div>
-                    <div class="flex items-center gap-3 mt-3" id="weather-forecast-container">
-                        <div class="text-3xl text-slate-300 animate-pulse"><i class="fa-solid fa-cloud-sun"></i></div>
-                        <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-700">Loading forecast...</span>
-                            <span class="text-xs text-slate-500">Fetching local data</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Billing Analysis & Tabbed View -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <!-- Tabs Header -->
@@ -303,7 +208,7 @@
             <!-- TAB 3: Compare (Tracker vs Actual) -->
             <div id="tab-content-compare" class="hidden space-y-4">
                 <div id="compare-empty" class="hidden bg-slate-50 border border-slate-200 text-slate-600 rounded-lg p-4 text-xs sm:text-sm">
-                    Enter your actual bill details in the <strong>MORE Calibration</strong> section below the billing card to enable comparison analysis.
+                    Enter your actual bill details in the <strong>MORE Calibration</strong> section (just above Daily Energy Flows) to enable comparison analysis.
                 </div>
                 <div id="compare-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Column 1: Grid Import / Consumption -->
@@ -360,6 +265,101 @@
                         <div id="cmp-net-diff" class="mt-2 pt-2 border-t border-slate-200 text-xs font-bold flex justify-between items-center">
                             <span>Variance:</span>
                             <span id="cmp-net-diff-val">PHP 0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Production</div>
+                <div class="text-3xl font-bold text-amber-500" id="kpi-production">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-production-comp" class="hidden mt-2"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Consumption</div>
+                <div class="text-3xl font-bold text-red-500" id="kpi-consumption">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-consumption-comp" class="hidden mt-2"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Exported (Feed-in)</div>
+                <div class="text-3xl font-bold text-emerald-500" id="kpi-feedin">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-feedin-comp" class="hidden mt-2"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Imported (Purchased)</div>
+                <div class="text-3xl font-bold text-red-500" id="kpi-purchased">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-purchased-comp" class="hidden mt-2"></div>
+            </div>
+        </div>
+
+        <!-- Daily Performance Widgets -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Widget 1: Daily Import & Export -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-sm font-semibold text-slate-800">Latest Daily Flow</div>
+                        <div class="text-xs text-slate-400 font-medium" id="daily-date-label">--</div>
+                    </div>
+                    <div class="flex flex-col gap-3 mt-3">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Imported</span>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-red-600" id="daily-import-val">0.0 kWh</div>
+                                <div id="daily-import-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Exported</span>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-emerald-600" id="daily-export-val">0.0 kWh</div>
+                                <div id="daily-export-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Widget 2: Today's Production vs Yesterday -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-sm font-semibold text-slate-800">Today's Production</div>
+                        <div class="text-xs text-slate-400 font-medium" id="daily-prod-date-label">--</div>
+                    </div>
+                    <div class="flex flex-col gap-3 mt-3">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Today</span>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-amber-500" id="daily-prod-today">0.0 kWh</div>
+                                <div id="daily-prod-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Yesterday</span>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-amber-500" id="daily-prod-yesterday">0.0 kWh</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 3: Weather Forecast -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-sm font-semibold text-slate-800">Tomorrow's Forecast</div>
+                        <div class="text-xs text-slate-400 font-medium">Iloilo City</div>
+                    </div>
+                    <div class="flex items-center gap-3 mt-3" id="weather-forecast-container">
+                        <div class="text-3xl text-slate-300 animate-pulse"><i class="fa-solid fa-cloud-sun"></i></div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-slate-700">Loading forecast...</span>
+                            <span class="text-xs text-slate-500">Fetching local data</span>
                         </div>
                     </div>
                 </div>
@@ -425,12 +425,12 @@
             </div>
         </div>
 
-        <!-- Battery & Backup (Deye Sync script: Daily Checks + Dawn Window tabs) -->
+        <!-- Battery & Backup (Deye Sync script: Daily Checks + Dawn Window + Charge Log tabs) -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
             <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-car-battery text-blue-600 mr-2"></i>Battery &amp; Backup</h3>
-                    <p class="text-xs text-slate-500 mt-1">Deye SE-F16 16 kWh · night floor <span id="bat-floor-label">25%</span> · outage shutdown <span id="bat-shutdown-label">11%</span> · restart 20%</p>
+                    <p class="text-xs text-slate-500 mt-1">Deye SE-F16 16 kWh · night floor <span id="bat-floor-label">23–25%</span> · outage shutdown <span id="bat-shutdown-label">11%</span> · restart 20%</p>
                 </div>
                 <div id="bat-status" class="text-[11px] text-slate-500 font-medium">Loading battery data…</div>
             </div>
@@ -447,16 +447,30 @@
                     <dl id="wd-kv" class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs"></dl>
                 </div>
 
-                <!-- Expansion evidence -->
+                <!-- Battery full charge cycle (Charge Log + Daily Checks tabs) -->
                 <div class="rounded-lg border border-slate-200 p-4 space-y-3 min-w-0">
                     <div class="flex justify-between items-baseline">
-                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Expansion evidence</h4>
-                        <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">minutes ≥ 7.6 kW</span>
+                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Battery full charge cycle</h4>
+                        <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">last 30 days</span>
                     </div>
-                    <div class="relative h-36 w-full"><canvas id="evChart"></canvas></div>
-                    <dl id="ev-kv" class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs"></dl>
-                    <p class="text-[11px] text-slate-500">Minutes with a full battery are solar held back at the inverter's limit. An extra panel adds the most on mornings, afternoons and cloudy days.</p>
+                    <div id="cl-banner" class="rounded-md p-3 bg-slate-50 border border-slate-200 text-sm text-slate-600">No charge data yet.</div>
+                    <div id="cl-bar" class="space-y-1"></div>
+                    <dl id="cl-kv" class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs"></dl>
+                    <div class="relative h-44 w-full"><canvas id="cycleChart"></canvas></div>
+                    <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500"><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:#10b981"></i>Floor → full</span><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:#0ea5e9"></i>Fastest charge</span><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:#f59e0b"></i>Highest solar peak</span><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:rgba(245,158,11,0.45)"></i>Not full</span><span class="inline-flex items-center gap-1"><i class="inline-block w-3 border-t-2 border-dashed border-slate-500"></i>Average full time</span></div>
+                    <p class="text-[11px] text-slate-500">Each bar runs from when solar starts charging the battery at the floor (about 24%) to when it reaches 100%. The dashed line is the average full time. Days that start above 30% are left out of the averages.</p>
                 </div>
+            </div>
+
+            <!-- Charge timing: monthly trends -->
+            <div class="rounded-lg border border-slate-200 p-4 space-y-3 min-w-0">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1">
+                    <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Charge timing · monthly trends</h4>
+                    <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">battery hands off to grid at ~23% · charging starts · full</span>
+                </div>
+                <div class="relative h-56 w-full"><canvas id="clChart"></canvas></div>
+                <div class="overflow-x-auto"><table id="cl-table" class="w-full text-xs whitespace-nowrap"></table></div>
+                <p class="text-[11px] text-slate-500">"Hands off to grid" is the first reading the night before with the battery at the floor (23–25%) and the house buying from MORE Power. "Charging starts" is when solar first pushes the battery % steadily up. Times are medians, so one stormy day doesn't skew the month.</p>
             </div>
 
             <!-- 2-8 AM window -->
@@ -1521,8 +1535,8 @@
         const SHEET_PUB = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBTbrCtjdJDcsSo_0EAleck7ui-uCTJvogOEss3rHPvCazSE4QyfyAKMdBVvC3bD4TPVa9Pnkne961/pub';
         const CHECKS_CSV = SHEET_PUB + '?gid=1233036401&single=true&output=csv';   // Daily Checks tab
         const DAWN_CSV = SHEET_PUB + '?gid=1485353095&single=true&output=csv';     // Dawn Window tab
+        const CHARGE_CSV = SHEET_PUB + '?gid=1490630042&single=true&output=csv';   // Charge Log tab
         const BAT = { floor: 25, shutdown: 11, gridChargeAlert: 0.5, importRate: 14.41 };
-        let evChartInstance = null;
 
         const num = v => { const x = parseFloat(String(v ?? '').replace(/[,\s]/g, '')); return isNaN(x) ? null : x; };
         const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -1575,25 +1589,121 @@
             ]);
         }
 
-        function renderEvidence(C) {
-            const R = C.slice(-30);
-            const ctx = document.getElementById('evChart');
-            if (evChartInstance) evChartInstance.destroy();
-            evChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: R.map(r => dayLabel(r.day)), datasets: [
-                    { label: 'Battery full', data: R.map(r => Math.min(r.near, r.nearFull)), backgroundColor: '#f59e0b', stack: 's' },
-                    { label: 'Battery charging', data: R.map(r => Math.max(0, r.near - r.nearFull)), backgroundColor: 'rgba(245,158,11,0.35)', stack: 's' } ] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } },
-                    scales: { x: { stacked: true, ticks: { font: { size: 9 }, maxTicksLimit: 8 } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'min', font: { size: 10 } } } } }
-            });
-            if (!R.length) { document.getElementById('ev-kv').innerHTML = ''; return; }
-            const top = R.reduce((a, b) => (b.peak || 0) > (a.peak || 0) ? b : a), hit = R.filter(r => r.near > 0).length, avgFull = R.reduce((s, r) => s + r.nearFull, 0) / R.length;
-            document.getElementById('ev-kv').innerHTML = kv([
-                ['Highest peak', `${fx(top.peak, 2)} kW · ${dayLabel(top.day)}`],
-                ['Days reaching the limit', `${hit} of ${R.length}`],
-                ['Avg minutes at limit, battery full', `${fx(avgFull, 0)} min/day`],
+        /* ---------- Charge Log: when the battery hands off to the grid, starts charging, is full ---------- */
+        const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const clockH = v => { const m = String(v ?? '').trim().match(/^(\d{1,2}):(\d{2})/); return m ? Number(m[1]) + Number(m[2]) / 60 : null; };
+        const clock = h => { if (h == null || isNaN(h)) return '—'; let m = Math.round(((h % 24) + 24) % 24 * 60) % 1440; const H = Math.floor(m / 60), M = m % 60; return `${(H % 12) || 12}:${String(M).padStart(2, '0')} ${H < 12 ? 'AM' : 'PM'}`; };
+        const median = a => { const v = a.filter(x => x != null && !isNaN(x)).sort((x, y) => x - y); if (!v.length) return null; const i = Math.floor(v.length / 2); return v.length % 2 ? v[i] : (v[i - 1] + v[i]) / 2; };
+        const mean = a => { const v = a.filter(x => x != null && !isNaN(x)); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
+        const manilaToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+        let clChartInstance = null;
+
+        function parseCharge(rows) {
+            return rows.map(r => {
+                let hand = clockH(r[2]); if (hand != null && hand >= 16) hand -= 24;   // the evening before
+                const glitch = num(r[8]) > 50;   // faster than the inverter can charge: a reading glitch
+                return { day: toDayKey(r[0]), status: String(r[1] || '').trim(), hand, low: num(r[3]), start: clockH(r[4]), startSoc: num(r[5]),
+                    full: glitch ? null : clockH(r[6]), hours: glitch ? null : num(r[7]), rate: glitch ? null : num(r[8]), max: num(r[9]), lastAt: clockH(r[10]), lastSoc: num(r[11]), solar: num(r[12]), onGrid: num(r[13]) };
+            }).filter(r => r.day).sort((a, b) => a.day < b.day ? -1 : 1);
+        }
+
+        let cycleChartInstance = null;
+        const BATDATA = { C: [], L: [] };
+
+        function renderCharge(L, C = []) {
+            const today = manilaToday();
+            const done = L.filter(r => r.day < today);
+            const recent = done.slice(-14), fullDays = recent.filter(r => r.full != null);
+            const typ = {
+                hand: median(recent.map(r => r.hand)), start: median(recent.map(r => r.start)), full: median(fullDays.map(r => r.full)),
+                hours: mean(fullDays.map(r => r.hours)), rate: median(recent.map(r => r.rate)), onGrid: mean(recent.map(r => r.onGrid)),
+            };
+            const t = L.find(r => r.day === today);
+            const bar = document.getElementById('cl-bar');
+            const socBar = (soc, label) => `<div class="flex justify-between text-[11px] text-slate-500"><span>${label}</span><span class="font-semibold text-slate-700">${fx(soc, 0)}%</span></div>
+                <div class="h-2.5 rounded bg-slate-100 overflow-hidden"><div class="h-full rounded bg-emerald-500" style="width:${Math.max(0, Math.min(100, soc || 0))}%"></div></div>`;
+            bar.innerHTML = '';
+            if (!L.length) {
+                banner('cl-banner', 'idle', 'No Charge Log rows yet', 'Run <b>backfillChargeLog</b> once in Apps Script. After that the 9 AM, 3 PM and 9 PM runs keep it current.');
+            } else if (t && t.status === 'Full') {
+                banner('cl-banner', 'ok', `Today: full at ${clock(t.full)}`, `Charging started ${clock(t.start)} at ${fx(t.startSoc, 0)}% and took ${hrs(t.hours)}` +
+                    (typ.hours != null ? ` (usual ${hrs(typ.hours)}).` : '.'));
+            } else if (t && t.status === 'Charging' && t.lastSoc != null && t.lastAt != null) {
+                const rate = (t.rate && t.rate > 1 ? t.rate : null) || typ.rate;
+                const eta = rate ? t.lastAt + (100 - t.lastSoc) / rate : null;
+                banner('cl-banner', 'warn', eta != null ? `Today: forecast full ≈ ${clock(eta)}` : 'Charging', `Charging since ${clock(t.start)} from ${fx(t.startSoc, 0)}%. At ${clock(t.lastAt)} it was ${fx(t.lastSoc, 0)}%` +
+                    (rate ? `; at about ${fx(rate, 0)}%/hr that is ${hrs((100 - t.lastSoc) / rate)} more. Cloud cover can push this later.` : '.'));
+                bar.innerHTML = socBar(t.lastSoc, `Battery at ${clock(t.lastAt)}`);
+            } else if (t && t.status === 'Not full') {
+                banner('cl-banner', 'bad', `Today: not full, peaked at ${fx(t.max, 0)}%`, `Charging started ${clock(t.start)} from ${fx(t.startSoc, 0)}%. Not enough sun to finish.`);
+            } else {
+                const eta = typ.start != null && typ.hours != null ? typ.start + typ.hours : typ.full;
+                banner('cl-banner', 'idle', `Today: expect full ≈ ${clock(eta)}`, `Usually charging starts about ${clock(typ.start)} and takes ${hrs(typ.hours)}. Today's row arrives with the 9 AM run.`);
+            }
+
+            // Cycle stats, last 30 days (today counts once it is full). Floor days start at 30% or less;
+            // charge rates above 50%/hr are reading glitches (the inverter cannot charge that fast).
+            const W30 = L.filter(r => r.day < today || r.status === 'Full').slice(-30);
+            const floorDays = W30.filter(r => r.full != null && r.hours != null && r.startSoc != null && r.startSoc <= 30 && !(r.rate > 50));
+            const avgFull = mean(floorDays.map(r => r.full)), avgHours = mean(floorDays.map(r => r.hours)), avgStart = mean(floorDays.map(r => r.start));
+            const avgStartSoc = mean(floorDays.map(r => r.startSoc));
+            const fastest = floorDays.reduce((a, b) => (a == null || b.hours < a.hours) ? b : a, null);
+            const since = W30.length ? W30[0].day : today;
+            const peakDays = C.filter(r => r.day >= since && r.peak != null);
+            const top = peakDays.reduce((a, b) => (a == null || b.peak > a.peak) ? b : a, null);
+                const fullCount = W30.filter(r => r.full != null).length;
+            document.getElementById('cl-kv').innerHTML = !W30.length ? '' : kv([
+                ['Usually full at', clock(avgFull), 'text-emerald-600'],
+                [`Avg charge time, ${fx(avgStartSoc, 0)}% → 100%`, hrs(avgHours)],
+                ['Charging usually starts', clock(avgStart)],
+                ['Highest solar peak', top ? `${fx(top.peak, 2)} kW · ${dayLabel(top.day)}` : '—'],
+                ['Fastest charge', fastest ? `${hrs(fastest.hours)} · ${dayLabel(fastest.day)}` : '—'],
+                ['Days reaching 100%', `${fullCount} of ${W30.length}`, fullCount < W30.length ? 'text-amber-600' : 'text-emerald-600'],
             ]);
+
+            // Floating bars: charging start → full, one per day.
+            const cctx = document.getElementById('cycleChart');
+            if (cycleChartInstance) cycleChartInstance.destroy();
+            const barColor = r => r.full == null ? 'rgba(245,158,11,0.45)' : (top && r.day === top.day) ? '#f59e0b' : (fastest && r.day === fastest.day) ? '#0ea5e9' : '#10b981';
+            cycleChartInstance = new Chart(cctx, {
+                data: { labels: W30.map(r => dayLabel(r.day)), datasets: [
+                    { type: 'bar', label: 'Floor → full', data: W30.map(r => r.start == null ? null : [r.start, r.full != null ? r.full : 16]),
+                      backgroundColor: W30.map(barColor), borderRadius: 3, borderSkipped: false, barPercentage: 0.75, categoryPercentage: 0.9 },
+                    { type: 'line', label: 'Average full time', data: W30.map(() => avgFull), borderColor: '#475569', borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0 } ] },
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => {
+                        const r = W30[c.dataIndex]; if (c.datasetIndex === 1) return `Average full: ${clock(avgFull)}`;
+                        return r.full != null ? `${clock(r.start)} (${fx(r.startSoc, 0)}%) → full ${clock(r.full)} · ${hrs(r.hours)}` : `${clock(r.start)} (${fx(r.startSoc, 0)}%) → not full, peaked ${fx(r.max, 0)}%`; } } } },
+                    scales: { x: { ticks: { font: { size: 9 }, maxTicksLimit: 8 } },
+                        y: { min: 6, max: 16, ticks: { stepSize: 2, font: { size: 9 }, callback: v => clock(v) } } } }
+            });
+
+            // Daily chart, last 60 days. Y axis is time of day; the evening before shows below midnight.
+            const R = L.slice(-60);
+            const ctx = document.getElementById('clChart');
+            if (clChartInstance) clChartInstance.destroy();
+            const ds = (label, key, color) => ({ label, data: R.map(r => r[key]), borderColor: color, backgroundColor: color, pointRadius: 2.5, borderWidth: 1.5, spanGaps: true, tension: 0.2 });
+            clChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: R.map(r => dayLabel(r.day)), datasets: [ds('Full at', 'full', '#10b981'), ds('Charging starts', 'start', '#f59e0b'), ds('Hands off to grid', 'hand', '#6366f1')] },
+                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${clock(c.raw)}` } } },
+                    scales: { x: { ticks: { font: { size: 9 }, maxTicksLimit: 10 } },
+                        y: { suggestedMin: -3, suggestedMax: 15, ticks: { stepSize: 3, font: { size: 9 }, callback: v => clock(v) } } } }
+            });
+
+            // Monthly table, newest month first.
+            const byMonth = {};
+            done.forEach(r => (byMonth[r.day.slice(0, 7)] = byMonth[r.day.slice(0, 7)] || []).push(r));
+            const th = h => `<th class="px-2 py-2 text-right font-semibold text-slate-500 first:text-left">${h}</th>`;
+            const td = (v, cls = '') => `<td class="px-2 py-1.5 text-right first:text-left border-t border-slate-100 ${cls}">${v}</td>`;
+            const months = Object.keys(byMonth).sort().reverse();
+            document.getElementById('cl-table').innerHTML = !months.length ? '' : '<thead><tr>' +
+                ['Month', 'Days', 'Hands off to grid', 'On grid before charging', 'Charging starts', 'Full at', 'Hours to full', 'Charge rate', 'Days full'].map(th).join('') + '</tr></thead><tbody>' +
+                months.map(k => { const M = byMonth[k], F = M.filter(r => r.full != null); const [y, m] = k.split('-').map(Number);
+                    return '<tr>' + td(`${MON[m - 1]} ${y}`, 'font-semibold') + td(M.length) + td(clock(median(M.map(r => r.hand)))) + td(hrs(mean(M.map(r => r.onGrid)))) +
+                        td(clock(median(M.map(r => r.start)))) + td(clock(median(F.map(r => r.full)))) + td(hrs(mean(F.map(r => r.hours)))) +
+                        td(fx(median(M.map(r => r.rate)), 0) + '%/hr') + td(`${F.length} of ${M.length}`, F.length < M.length ? 'text-amber-600' : 'text-emerald-600') + '</tr>'; }).join('') + '</tbody>';
         }
 
         function renderDawn(D) {
@@ -1627,9 +1737,11 @@
                 }
             };
             await Promise.all([
-                load(CHECKS_CSV, 'Daily Checks', parseChecks, C => { renderWatchdog(C); renderEvidence(C); }),
+                load(CHECKS_CSV, 'Daily Checks', parseChecks, C => { BATDATA.C = C; renderWatchdog(C); }),
                 load(DAWN_CSV, 'Dawn Window', parseDawn, renderDawn),
+                load(CHARGE_CSV, 'Charge Log', parseCharge, L => { BATDATA.L = L; }),
             ]);
+            renderCharge(BATDATA.L, BATDATA.C);
             status.innerHTML = msgs.length ? `<span class="text-amber-600"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(msgs.join(' · '))}</span>`
                 : `<span class="text-emerald-600"><i class="fa-solid fa-check"></i> Updated ${new Date().toLocaleTimeString()}</span>`;
         }
