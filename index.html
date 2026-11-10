@@ -103,6 +103,30 @@
             </div>
         </div>
 
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Production</div>
+                <div class="text-3xl font-bold text-amber-500" id="kpi-production">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-production-comp" class="hidden mt-2"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Consumption</div>
+                <div class="text-3xl font-bold text-red-500" id="kpi-consumption">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-consumption-comp" class="hidden mt-2"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Exported (Feed-in)</div>
+                <div class="text-3xl font-bold text-emerald-500" id="kpi-feedin">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-feedin-comp" class="hidden mt-2"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="text-sm font-semibold text-slate-500 mb-1">Total Imported (Purchased)</div>
+                <div class="text-3xl font-bold text-red-500" id="kpi-purchased">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
+                <div id="kpi-purchased-comp" class="hidden mt-2"></div>
+            </div>
+        </div>
+
         <!-- Billing Analysis & Tabbed View -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <!-- Tabs Header -->
@@ -132,10 +156,12 @@
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estimated Import Cost</div>
                         <div class="text-xl font-bold text-slate-800 mt-1" id="fin-import">PHP 0.00</div>
+                        <div id="fin-import-comp" class="hidden text-xs font-semibold mt-1"></div>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estimated Export Credit</div>
                         <div class="text-xl font-bold text-emerald-600 mt-1" id="fin-export">PHP 0.00</div>
+                        <div id="fin-export-comp" class="hidden text-xs font-semibold mt-1"></div>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Estimated Bill</div>
@@ -199,7 +225,7 @@
                 <div id="actual-bill-empty" class="hidden bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-4 text-xs sm:text-sm flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-circle-info text-amber-500 text-base"></i>
-                        <span>No MORE bill saved for this period yet. Upload it in <strong>MORE Calibration</strong> (just above Daily Energy Flows).</span>
+                        <span>No MORE bill saved for this period yet. Upload it in <strong>MORE Calibration</strong> (below the daily widgets).</span>
                     </div>
                 </div>
                 <div id="actual-bill-data" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center md:text-left">
@@ -225,7 +251,7 @@
             <!-- TAB 3: Compare (Tracker vs Actual) -->
             <div id="tab-content-compare" class="hidden space-y-4">
                 <div id="compare-empty" class="hidden bg-slate-50 border border-slate-200 text-slate-600 rounded-lg p-4 text-xs sm:text-sm">
-                    Enter your actual bill details in the <strong>MORE Calibration</strong> section (just above Daily Energy Flows) to enable comparison analysis.
+                    Enter your actual bill details in the <strong>MORE Calibration</strong> section (below the daily widgets) to enable comparison analysis.
                 </div>
                 <div id="compare-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Column 1: Grid Import / Consumption -->
@@ -288,28 +314,13 @@
             </div>
         </div>
 
-        <!-- KPI Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div class="text-sm font-semibold text-slate-500 mb-1">Total Production</div>
-                <div class="text-3xl font-bold text-amber-500" id="kpi-production">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
-                <div id="kpi-production-comp" class="hidden mt-2"></div>
+        <!-- Energy Chart Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Daily Energy Flows</h3>
+            <div class="relative h-80 w-full">
+                <canvas id="energyChart"></canvas>
             </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div class="text-sm font-semibold text-slate-500 mb-1">Total Consumption</div>
-                <div class="text-3xl font-bold text-red-500" id="kpi-consumption">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
-                <div id="kpi-consumption-comp" class="hidden mt-2"></div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div class="text-sm font-semibold text-slate-500 mb-1">Total Exported (Feed-in)</div>
-                <div class="text-3xl font-bold text-emerald-500" id="kpi-feedin">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
-                <div id="kpi-feedin-comp" class="hidden mt-2"></div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div class="text-sm font-semibold text-slate-500 mb-1">Total Imported (Purchased)</div>
-                <div class="text-3xl font-bold text-red-500" id="kpi-purchased">0 <span class="text-sm font-normal text-slate-400">kWh</span></div>
-                <div id="kpi-purchased-comp" class="hidden mt-2"></div>
-            </div>
+            <p class="text-[11px] text-slate-500 mt-2"><span class="font-semibold text-slate-600">Bill change, per day</span> (the row under the dates): that day's import cost minus its export credit, at this period's rates. <span class="text-red-600 font-semibold">+₱ in red</span> means the day added to your bill; <span class="text-emerald-600 font-semibold">−₱ in green</span> means its export credit lowered your bill. <span class="font-semibold text-slate-600">Balance</span> (the shaded row) is your bill so far this period after each day: <span class="text-red-600 font-semibold">₱ in red</span> is what you'd owe, <span class="text-emerald-600 font-semibold">−₱ in green</span> is a credit. The last day matches the Net Estimated Bill. Hover a day for the breakdown.</p>
         </div>
 
         <!-- Daily Performance Widgets -->
@@ -464,14 +475,6 @@
                 <div class="mt-3 text-[11px] text-blue-600 font-medium">
                     <i class="fa-solid fa-circle-info mr-1"></i> Note: For MORE Power, your Export Credit rate is typically equal to the "Generation Charge" rate on your bill (e.g. PHP 7.5670).
                 </div>
-            </div>
-        </div>
-
-        <!-- Energy Chart Card -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 class="text-lg font-bold text-slate-800 mb-4">Daily Energy Flows</h3>
-            <div class="relative h-80 w-full">
-                <canvas id="energyChart"></canvas>
             </div>
         </div>
 
@@ -1397,6 +1400,9 @@
                 bannerIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-600"></i>';
             }
 
+            renderVsLastCycle(activeData, importCost, exportCredit);
+            if (chartInstance) chartInstance.update('none');
+
             // Net Estimated Bill ticker vs yesterday
             const finNetCompEl = document.getElementById('fin-net-comp');
             const rawDays = activeData.chartData?.rawDays || [];
@@ -1519,6 +1525,38 @@
             }
         }
 
+        // Estimated import cost and export credit compared with the previous billing cycle at the same point
+        // (same number of days in), using each cycle's own rates. The previous cycle's full total is shown too.
+        function renderVsLastCycle(activeData, importCost, exportCredit) {
+            const impEl = document.getElementById('fin-import-comp'), expEl = document.getElementById('fin-export-comp');
+            const prevKey = getPreviousMonthKey(appState.activeMonth), prev = prevKey && appState.monthlyData[prevKey];
+            const days = activeData.chartData?.rawDays || [];
+            if (!prev || !days.length || !prev.chartData?.rawDays?.length) { impEl.classList.add('hidden'); expEl.classList.add('hidden'); return; }
+            const cd = appState.billingCycleDay || 23;
+            const [y, m] = appState.activeMonth.split('-').map(Number), [py, pm] = prevKey.split('-').map(Number);
+            const start = new Date(y, m - 1, cd), pStart = new Date(py, pm - 1, cd), pEnd = new Date(y, m - 1, cd);
+            const last = days[days.length - 1].dateObj;
+            const elapsed = Math.round((last - start) / 864e5) + 1;           // days into this cycle
+            const cut = new Date(pStart); cut.setDate(cut.getDate() + elapsed);
+            const pr = prev.rates || {}, pImp = pr.import || 14.42, pExp = pr.export || 7.56;
+            let toImp = 0, toExp = 0, toDays = 0;
+            prev.chartData.rawDays.forEach(d => { if (d.dateObj < cut) { toImp += d.purc || 0; toExp += d.feedIn || 0; toDays++; } });
+            const fullCycle = cut >= pEnd;
+            const pImpTo = toImp * pImp, pExpTo = toExp * pExp, pImpAll = prev.totals.purchased * pImp, pExpAll = prev.totals.feedIn * pExp;
+            const money = v => `PHP ${Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const pLabel = `${pStart.toLocaleString('default', { month: 'short', day: 'numeric' })} cycle`;
+            const partial = toDays < Math.min(elapsed, 28) * 0.8 ? ` · only ${toDays} days of data` : '';
+            const line = (el, now, then, all, upIsGood) => {
+                const d = now - then, up = d > 0.005, down = d < -0.005;
+                const good = (up && upIsGood) || (down && !upIsGood);
+                el.className = 'text-xs font-semibold mt-1 block ' + (!up && !down ? 'text-slate-500' : good ? 'text-emerald-600' : 'text-red-600');
+                el.innerHTML = `<i class="fa-solid ${up ? 'fa-arrow-up' : down ? 'fa-arrow-down' : 'fa-minus'}"></i> ${up ? '+' : down ? '-' : ''}${money(d)} vs ${fullCycle ? 'last cycle' : `day ${elapsed} of last cycle`} (${money(then)})` +
+                    `<div class="text-[11px] font-medium text-slate-400 mt-0.5">${pLabel} total: ${money(all)}${partial}</div>`;
+            };
+            line(impEl, importCost, pImpTo, pImpAll, false);
+            line(expEl, exportCredit, pExpTo, pExpAll, true);
+        }
+
         function renderChart(labels, prod, cons, feedIn, purc) {
             const ctx = document.getElementById('energyChart').getContext('2d');
             
@@ -1572,9 +1610,24 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: { padding: { bottom: 42 } },
                     interaction: {
                         mode: 'index',
                         intersect: false,
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                footer: items => {
+                                    if (!items.length) return '';
+                                    const n = dayNet(items[0].dataIndex);
+                                    if (!n) return '';
+                                    return [`Credit earned: PHP ${n.credit.toFixed(2)}`, `Import cost: PHP ${n.cost.toFixed(2)}`,
+                                        `Bill change: ${n.bill > 0 ? '+' : n.bill < 0 ? '−' : ''}PHP ${Math.abs(n.bill).toFixed(2)} (${n.bill > 0 ? 'adds to your bill' : 'credit, lowers your bill'})`,
+                                        `Running balance: ${n.balance < 0 ? '−' : ''}PHP ${Math.abs(n.balance).toFixed(2)} ${n.balance > 0 ? '(you owe)' : '(credit)'}`];
+                                }
+                            }
+                        }
                     },
                     scales: {
                         y: {
@@ -1585,9 +1638,56 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [dayNetRowPlugin]
             });
+            chartInstance.$dayData = { feedIn, purc };
         }
+
+        // Net metering for one day of the chart: export credit minus import cost, at the period's rates.
+        function dayNet(i) {
+            const d = chartInstance && chartInstance.$dayData;
+            if (!d || d.feedIn[i] == null || d.purc[i] == null) return null;
+            const imp = parseFloat(document.getElementById('import-rate').value) || 14.42;
+            const exp = parseFloat(document.getElementById('export-rate').value) || 7.56;
+            const change = k => (d.purc[k] || 0) * imp - (d.feedIn[k] || 0) * exp;
+            const credit = (d.feedIn[i] || 0) * exp, cost = (d.purc[i] || 0) * imp;
+            let balance = 0; for (let k = 0; k <= i; k++) balance += change(k);   // period to date, same as the Net Estimated Bill
+            return { credit, cost, bill: cost - credit, balance };   // + adds to the bill, − lowers it
+        }
+        // Draws each day's bill change under its date: +₱ in red adds to the bill, −₱ in green lowers it.
+        const dayNetRowPlugin = {
+            id: 'dayNetRow',
+            afterDraw(chart) {
+                const x = chart.scales.x; if (!x || !chart.$dayData) return;
+                const n = chart.data.labels.length; if (!n) return;
+                const step = x.width / n, small = step < 40, every = step < 26 ? 2 : 1;
+                const ctx = chart.ctx, y = x.bottom + 13;
+                ctx.save();
+                ctx.font = `600 ${small ? 9 : 11}px ui-sans-serif, system-ui, sans-serif`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                const y2 = y + 17;
+                // a faint band behind the running balance row
+                ctx.fillStyle = '#f1f5f9'; ctx.fillRect(x.left, y2 - 8, x.width, 16);
+                for (let i = 0; i < n; i++) {
+                    const v = dayNet(i); if (!v) continue;
+                    const last = i === n - 1;
+                    if (i % every && !last) continue;
+                    const px = x.getPixelForValue(i);
+                    const r = Math.round(v.bill);
+                    ctx.font = `600 ${small ? 9 : 11}px ui-sans-serif, system-ui, sans-serif`;
+                    ctx.fillStyle = r > 0 ? '#dc2626' : r < 0 ? '#059669' : '#64748b';
+                    ctx.fillText(`${r > 0 ? '+' : r < 0 ? '−' : ''}₱${Math.abs(r)}`, px, y);
+                    const b = Math.round(v.balance);
+                    ctx.font = `${last ? 800 : 700} ${small ? 9 : 11}px ui-sans-serif, system-ui, sans-serif`;
+                    ctx.fillStyle = b > 0 ? '#b91c1c' : b < 0 ? '#047857' : '#64748b';
+                    ctx.fillText(`${b < 0 ? '−' : ''}₱${Math.abs(b).toLocaleString()}`, px, y2);
+                }
+                ctx.textAlign = 'right'; ctx.fillStyle = '#64748b'; ctx.font = `600 ${small ? 9 : 10}px ui-sans-serif, system-ui, sans-serif`;
+                if (!small) { ctx.fillText('Bill', x.left - 6, y); ctx.fillText('Balance', x.left - 6, y2); }
+                ctx.restore();
+            }
+        };
 
 
         /* ---------------- MORE bills: upload, read the figures, history ---------------- */
