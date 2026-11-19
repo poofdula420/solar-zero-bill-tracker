@@ -41,72 +41,6 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         
-        <!-- Controls & Upload Section -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col lg:flex-row gap-6 justify-between items-start">
-            
-            <!-- Data Source Block (Hidden) -->
-            <div class="hidden flex-col space-y-2 w-full lg:w-[28%]">
-                <label class="block text-sm font-semibold text-slate-700 h-5">Data Source (File or Google Sheets)</label>
-                <div class="flex flex-col gap-2">
-                    <input type="file" id="file-upload" multiple accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="block w-full text-sm text-slate-500
-                        file:mr-4 file:py-1 file:px-4
-                        file:rounded-md file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-blue-50 file:text-blue-700
-                        hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-md h-[34px] pt-[2px]">
-                    <div class="flex gap-2">
-                        <input type="url" id="sheet-url" placeholder="Paste Google Sheets CSV link..." class="w-full px-3 py-1 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs bg-white shadow-sm h-[34px]">
-                        <button id="sync-sheet-btn" class="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition-colors shadow-sm h-[34px]">
-                            Sync
-                        </button>
-                    </div>
-                </div>
-                <div id="sync-status" class="text-[10px] text-slate-500 mt-1 font-medium">Upload a file or sync a CSV link to begin.</div>
-            </div>
-
-            <!-- Billing Cycle Block -->
-            <div class="flex flex-col space-y-2 w-full lg:w-[20%]">
-                <label class="block text-sm font-semibold text-slate-700 h-5" title="Day of the month your billing cycle begins">Billing Cycle Start</label>
-                <input type="number" id="billing-cycle-day" min="1" max="31" value="23" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium shadow-sm h-[42px]">
-                <p class="text-[10px] text-slate-400 italic mt-1 font-medium">Day of month (e.g. 23)</p>
-            </div>
-
-            <!-- Month Selector Block -->
-            <div class="flex flex-col space-y-2 w-full lg:w-[30%] hidden" id="month-selector-container">
-                <label class="block text-sm font-semibold text-slate-700 h-5">Display Month</label>
-                <select id="month-selector" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium shadow-sm h-[42px]">
-                </select>
-                <p class="text-[10px] text-slate-400 italic mt-1 font-medium">Select billing period</p>
-            </div>
-
-            <!-- Rates & Save Block -->
-            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto lg:flex-1 justify-end">
-                <div class="flex flex-col space-y-2 w-full sm:w-auto min-w-[150px]">
-                    <div class="flex justify-between items-center h-5">
-                        <label class="block text-sm font-semibold text-red-600 truncate">Grid Import Rate (PHP)</label>
-                        <a href="https://morepower.com.ph/monthly-rates/" target="_blank" class="text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors ml-2" title="View MORE Rates"><i class="fa-solid fa-external-link-alt"></i></a>
-                    </div>
-                    <input type="number" id="import-rate" value="14.42" step="0.01" class="w-full px-3 py-2 border border-red-300 bg-red-50 text-red-600 font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm h-[42px]">
-                    <div id="import-rate-subtext" class="text-[10px] text-slate-400 italic mt-1 font-medium">Rate for current billing period</div>
-                </div>
-                
-                <div class="flex flex-col space-y-2 w-full sm:w-auto min-w-[150px]">
-                    <div class="flex justify-between items-center h-5">
-                        <label class="block text-sm font-semibold text-emerald-600 truncate">Grid Export Credit (PHP)</label>
-                    </div>
-                    <input type="number" id="export-rate" value="7.56" step="0.01" class="w-full px-3 py-2 border border-emerald-300 bg-emerald-50 text-emerald-600 font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm h-[42px]">
-                    <div id="export-rate-subtext" class="text-[10px] text-slate-400 italic mt-1 font-medium">Rate for current billing period</div>
-                </div>
-                
-                <div class="flex flex-col space-y-2 w-full sm:w-auto justify-start">
-                    <div class="h-5 hidden sm:block"></div>
-                    <button id="manual-save-btn" class="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors flex items-center justify-center gap-2 h-[42px] shadow-sm">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Save
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
@@ -309,81 +243,112 @@
 
         <!-- Energy Chart Card -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 class="text-lg font-bold text-slate-800 mb-4">Daily Energy Flows</h3>
+            <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+                <h3 class="text-lg font-bold text-slate-800">Daily Energy Flows</h3>
+                <span class="text-[11px] text-slate-400">Tap any day on the chart to show its details here</span>
+            </div>
+            <!-- Day strip: the selected day (latest by default) + tomorrow's forecast -->
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr_16rem] gap-3 mb-4">
+                <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 min-w-0">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="text-sm font-bold text-slate-800 flex items-center gap-2"><span id="ds-title">--</span><span id="ds-badge" class="text-[10px] font-semibold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Latest</span></div>
+                        <button id="ds-back" type="button" class="hidden text-xs font-semibold text-blue-600 hover:underline"><i class="fa-solid fa-arrow-rotate-left"></i> Back to latest</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Imported</div><div class="text-xl font-bold text-red-600" id="ds-imp">--</div><div class="text-[11px] font-semibold" id="ds-imp-sub"></div></div>
+                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Exported</div><div class="text-xl font-bold text-emerald-600" id="ds-exp">--</div><div class="text-[11px] font-semibold" id="ds-exp-sub"></div></div>
+                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Produced</div><div class="text-xl font-bold text-amber-500" id="ds-prod">--</div><div class="text-[11px] font-semibold" id="ds-prod-sub"></div></div>
+                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Bill change</div><div class="text-xl font-bold text-slate-800" id="ds-bill">--</div><div class="text-[11px] font-semibold" id="ds-bill-sub"></div></div>
+                    </div>
+                </div>
+                <div class="rounded-lg border border-slate-200 p-3 min-w-0">
+                    <div class="flex items-center justify-between mb-2"><span class="text-sm font-bold text-slate-800">Tomorrow's forecast</span><span class="text-[11px] text-slate-400">Iloilo City</span></div>
+                    <div class="flex items-center gap-3" id="weather-forecast-container">
+                        <div class="text-3xl text-slate-300 animate-pulse"><i class="fa-solid fa-cloud-sun"></i></div>
+                        <div class="flex flex-col"><span class="text-sm font-bold text-slate-700">Loading forecast...</span></div>
+                    </div>
+                </div>
+            </div>
             <div class="relative h-80 w-full">
                 <canvas id="energyChart"></canvas>
             </div>
             <p class="text-[11px] text-slate-500 mt-2"><span class="font-semibold text-slate-600">Bill change, per day</span> (the row under the dates): that day's import cost minus its export credit, at this period's rates. <span class="text-red-600 font-semibold">+₱ in red</span> means the day added to your bill; <span class="text-emerald-600 font-semibold">−₱ in green</span> means its export credit lowered your bill. <span class="font-semibold text-slate-600">Balance</span> (the shaded row) is your bill so far this period after each day: <span class="text-red-600 font-semibold">₱ in red</span> is what you'd owe, <span class="text-emerald-600 font-semibold">−₱ in green</span> is a credit. The last day matches the Net Estimated Bill. Hover a day for the breakdown.</p>
         </div>
 
-        <!-- Daily Performance Widgets -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Widget 1: Daily Import & Export -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="text-sm font-semibold text-slate-800">Latest Daily Flow</div>
-                        <div class="text-xs text-slate-400 font-medium" id="daily-date-label">--</div>
-                    </div>
-                    <div class="flex flex-col gap-3 mt-3">
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                            <span class="text-xs font-semibold text-slate-500 uppercase">Imported</span>
-                            <div class="text-right">
-                                <div class="text-2xl font-bold text-red-600" id="daily-import-val">0.0 kWh</div>
-                                <div id="daily-import-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center pt-1">
-                            <span class="text-xs font-semibold text-slate-500 uppercase">Exported</span>
-                            <div class="text-right">
-                                <div class="text-2xl font-bold text-emerald-600" id="daily-export-val">0.0 kWh</div>
-                                <div id="daily-export-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Billing Settings Accordion (billing cycle start, display month, rates) -->
+        <div class="bg-blue-50 rounded-xl shadow-sm border border-blue-100 p-5 transition-all duration-300">
+            <button id="toggle-settings" type="button" aria-expanded="false" aria-controls="settings-content" class="w-full flex justify-between items-center gap-3 text-left focus:outline-none">
+                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 min-w-0">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-sliders text-blue-500"></i><h3 class="text-md font-bold text-slate-800">Billing Settings</h3></span>
+                    <span id="settings-summary" class="text-xs text-slate-500"></span>
                 </div>
-            </div>
+                <i id="settings-arrow" class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-300 shrink-0"></i>
+            </button>
+            <div id="settings-content" class="hidden mt-4 pt-4 border-t border-blue-200">
+                <div class="flex flex-col lg:flex-row gap-6 justify-between items-start">
             
-            <!-- Widget 2: Today's Production vs Yesterday -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="text-sm font-semibold text-slate-800">Today's Production</div>
-                        <div class="text-xs text-slate-400 font-medium" id="daily-prod-date-label">--</div>
-                    </div>
-                    <div class="flex flex-col gap-3 mt-3">
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                            <span class="text-xs font-semibold text-slate-500 uppercase">Today</span>
-                            <div class="text-right">
-                                <div class="text-2xl font-bold text-amber-500" id="daily-prod-today">0.0 kWh</div>
-                                <div id="daily-prod-comp" class="text-[10px] font-semibold hidden mt-0.5"></div>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center pt-1">
-                            <span class="text-xs font-semibold text-slate-500 uppercase">Yesterday</span>
-                            <div class="text-right">
-                                <div class="text-2xl font-bold text-amber-500" id="daily-prod-yesterday">0.0 kWh</div>
-                            </div>
-                        </div>
+            <!-- Data Source Block (Hidden) -->
+            <div class="hidden flex-col space-y-2 w-full lg:w-[28%]">
+                <label class="block text-sm font-semibold text-slate-700 h-5">Data Source (File or Google Sheets)</label>
+                <div class="flex flex-col gap-2">
+                    <input type="file" id="file-upload" multiple accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="block w-full text-sm text-slate-500
+                        file:mr-4 file:py-1 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-md h-[34px] pt-[2px]">
+                    <div class="flex gap-2">
+                        <input type="url" id="sheet-url" placeholder="Paste Google Sheets CSV link..." class="w-full px-3 py-1 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs bg-white shadow-sm h-[34px]">
+                        <button id="sync-sheet-btn" class="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition-colors shadow-sm h-[34px]">
+                            Sync
+                        </button>
                     </div>
                 </div>
+                <div id="sync-status" class="text-[10px] text-slate-500 mt-1 font-medium">Upload a file or sync a CSV link to begin.</div>
             </div>
 
-            <!-- Widget 3: Weather Forecast -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="text-sm font-semibold text-slate-800">Tomorrow's Forecast</div>
-                        <div class="text-xs text-slate-400 font-medium">Iloilo City</div>
+            <!-- Billing Cycle Block -->
+            <div class="flex flex-col space-y-2 w-full lg:w-[20%]">
+                <label class="block text-sm font-semibold text-slate-700 h-5" title="Day of the month your billing cycle begins">Billing Cycle Start</label>
+                <input type="number" id="billing-cycle-day" min="1" max="31" value="23" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium shadow-sm h-[42px]">
+                <p class="text-[10px] text-slate-400 italic mt-1 font-medium">Day of month (e.g. 23)</p>
+            </div>
+
+            <!-- Month Selector Block -->
+            <div class="flex flex-col space-y-2 w-full lg:w-[30%] hidden" id="month-selector-container">
+                <label class="block text-sm font-semibold text-slate-700 h-5">Display Month</label>
+                <select id="month-selector" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium shadow-sm h-[42px]">
+                </select>
+                <p class="text-[10px] text-slate-400 italic mt-1 font-medium">Select billing period</p>
+            </div>
+
+            <!-- Rates & Save Block -->
+            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto lg:flex-1 justify-end">
+                <div class="flex flex-col space-y-2 w-full sm:w-auto min-w-[150px]">
+                    <div class="flex justify-between items-center h-5">
+                        <label class="block text-sm font-semibold text-red-600 truncate">Grid Import Rate (PHP)</label>
+                        <a href="https://morepower.com.ph/monthly-rates/" target="_blank" class="text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors ml-2" title="View MORE Rates"><i class="fa-solid fa-external-link-alt"></i></a>
                     </div>
-                    <div class="flex items-center gap-3 mt-3" id="weather-forecast-container">
-                        <div class="text-3xl text-slate-300 animate-pulse"><i class="fa-solid fa-cloud-sun"></i></div>
-                        <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-700">Loading forecast...</span>
-                            <span class="text-xs text-slate-500">Fetching local data</span>
-                        </div>
-                    </div>
+                    <input type="number" id="import-rate" value="14.42" step="0.01" class="w-full px-3 py-2 border border-red-300 bg-red-50 text-red-600 font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm h-[42px]">
+                    <div id="import-rate-subtext" class="text-[10px] text-slate-400 italic mt-1 font-medium">Rate for current billing period</div>
                 </div>
+                
+                <div class="flex flex-col space-y-2 w-full sm:w-auto min-w-[150px]">
+                    <div class="flex justify-between items-center h-5">
+                        <label class="block text-sm font-semibold text-emerald-600 truncate">Grid Export Credit (PHP)</label>
+                    </div>
+                    <input type="number" id="export-rate" value="7.56" step="0.01" class="w-full px-3 py-2 border border-emerald-300 bg-emerald-50 text-emerald-600 font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm h-[42px]">
+                    <div id="export-rate-subtext" class="text-[10px] text-slate-400 italic mt-1 font-medium">Rate for current billing period</div>
+                </div>
+                
+                <div class="flex flex-col space-y-2 w-full sm:w-auto justify-start">
+                    <div class="h-5 hidden sm:block"></div>
+                    <button id="manual-save-btn" class="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors flex items-center justify-center gap-2 h-[42px] shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Save
+                    </button>
+                </div>
+            </div>
+        </div>
             </div>
         </div>
 
@@ -907,6 +872,24 @@
             }
         });
 
+        // Billing Settings accordion: hidden by default; the header shows the period and rates while closed.
+        function updateSettingsSummary() {
+            const sel = document.getElementById('month-selector');
+            const period = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : '';
+            const imp = parseFloat(document.getElementById('import-rate').value), exp = parseFloat(document.getElementById('export-rate').value);
+            document.getElementById('settings-summary').textContent = [period, isNaN(imp) ? '' : `Import PHP ${imp.toFixed(2)}`, isNaN(exp) ? '' : `Export PHP ${exp.toFixed(2)}`,
+                `Cycle starts day ${document.getElementById('billing-cycle-day').value || 23}`].filter(Boolean).join(' · ');
+        }
+        function setSettingsOpen(open) {
+            document.getElementById('settings-content').classList.toggle('hidden', !open);
+            document.getElementById('settings-arrow').classList.toggle('rotate-180', open);
+            document.getElementById('toggle-settings').setAttribute('aria-expanded', String(open));
+            try { localStorage.setItem('billingSettingsOpen', open ? '1' : '0'); } catch (e) {}
+        }
+        document.getElementById('toggle-settings').addEventListener('click', () => setSettingsOpen(document.getElementById('settings-content').classList.contains('hidden')));
+        try { if (localStorage.getItem('billingSettingsOpen') === '1') setSettingsOpen(true); } catch (e) {}
+        ['month-selector', 'import-rate', 'export-rate', 'billing-cycle-day'].forEach(id => { const el = document.getElementById(id); el && el.addEventListener('change', updateSettingsSummary); el && el.addEventListener('input', updateSettingsSummary); });
+
         // Billing Tabs Navigation
         const tabBtnEst = document.getElementById('tab-btn-estimated');
         const tabBtnAct = document.getElementById('tab-btn-actual');
@@ -1117,73 +1100,51 @@
             updateDailyWidgets();
         }
 
+        // The day strip above Daily Energy Flows: the latest day, or the day tapped on the chart.
+        let selectedDayIdx = null;   // null = latest day of the period shown
+        function selectDay(i) {
+            const n = chartInstance ? chartInstance.data.labels.length : 0;
+            selectedDayIdx = (i == null || i >= n - 1) ? null : i;
+            renderDayStrip(); if (chartInstance) chartInstance.draw();
+        }
+        document.getElementById('ds-back').addEventListener('click', () => selectDay(null));
+
+        function renderDayStrip() {
+            const md = appState.monthlyData && appState.monthlyData[appState.activeMonth];
+            const days = md?.chartData?.rawDays || [];
+            if (!days.length || !chartInstance) return;
+            const i = selectedDayIdx == null ? days.length - 1 : Math.min(selectedDayIdx, days.length - 1);
+            const d = days[i], dt = new Date(d.dateObj), v = dayNet(i);
+            const imp = parseFloat(document.getElementById('import-rate').value) || 14.42, exp = parseFloat(document.getElementById('export-rate').value) || 7.56;
+            const p2 = x => Math.abs(x).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const set = (id, html, cls) => { const el = document.getElementById(id); el.innerHTML = html; if (cls != null) el.className = cls; };
+            const latest = i === days.length - 1;
+            set('ds-title', dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
+            document.getElementById('ds-badge').classList.toggle('hidden', !latest);
+            document.getElementById('ds-back').classList.toggle('hidden', latest);
+            set('ds-imp', `${(d.purc || 0).toFixed(1)} kWh`);
+            set('ds-imp-sub', `Cost PHP ${p2((d.purc || 0) * imp)} <span class="font-medium text-slate-400">· × ${imp.toFixed(2)}</span>`, 'text-[11px] font-semibold text-red-600');
+            set('ds-exp', `${(d.feedIn || 0).toFixed(1)} kWh`);
+            set('ds-exp-sub', `Credit PHP ${p2((d.feedIn || 0) * exp)} <span class="font-medium text-slate-400">· × ${exp.toFixed(2)}</span>`, 'text-[11px] font-semibold text-emerald-600');
+            set('ds-prod', `${(d.prod || 0).toFixed(1)} kWh`);
+            const prevDate = new Date(dt); prevDate.setDate(prevDate.getDate() - 1);
+            const prev = appState.historicalDaily[`${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}-${String(prevDate.getDate()).padStart(2, '0')}`];
+            if (prev && prev.prod > 0) {
+                const pct = (d.prod - prev.prod) / prev.prod * 100, up = pct >= 0;
+                set('ds-prod-sub', `<i class="fa-solid ${up ? 'fa-arrow-up' : 'fa-arrow-down'}"></i> ${Math.abs(pct).toFixed(0)}% vs ${prevDate.toLocaleDateString('en-US', { weekday: 'short' })} <span class="font-medium text-slate-400">(${prev.prod.toFixed(1)})</span>`,
+                    'text-[11px] font-semibold ' + (up ? 'text-emerald-600' : 'text-red-600'));
+            } else set('ds-prod-sub', '', 'text-[11px]');
+            if (v) {
+                const r = v.bill;
+                set('ds-bill', `${r > 0.005 ? '+' : r < -0.005 ? '−' : ''}PHP ${p2(r)}`, 'text-xl font-bold ' + (r > 0.005 ? 'text-red-600' : r < -0.005 ? 'text-emerald-600' : 'text-slate-600'));
+                set('ds-bill-sub', `${r > 0.005 ? 'Added to your bill' : 'Credit, lowered your bill'} <span class="block font-medium text-slate-400">Balance so far: ${v.balance < 0 ? '−' : ''}PHP ${p2(v.balance)}</span>`,
+                    'text-[11px] font-semibold ' + (r > 0.005 ? 'text-red-600' : 'text-emerald-600'));
+            }
+        }
+
         function updateDailyWidgets() {
-            if (!appState.historicalDaily) return;
-            const days = Object.keys(appState.historicalDaily).sort();
-            if (days.length === 0) return;
-
-            const latestDay = days[days.length - 1];
-            let previousDay = null;
-            
-            const latestDate = new Date(latestDay + 'T00:00:00');
-            const expectedPrevDate = new Date(latestDate);
-            expectedPrevDate.setDate(latestDate.getDate() - 1);
-            const expectedPrevKey = `${expectedPrevDate.getFullYear()}-${String(expectedPrevDate.getMonth()+1).padStart(2, '0')}-${String(expectedPrevDate.getDate()).padStart(2, '0')}`;
-            
-            if (appState.historicalDaily[expectedPrevKey]) {
-                previousDay = expectedPrevKey;
-            } else if (days.length > 1) {
-                previousDay = days[days.length - 2];
-            }
-
-            const todayData = appState.historicalDaily[latestDay];
-            const yesterdayData = previousDay ? appState.historicalDaily[previousDay] : null;
-
-            document.getElementById('daily-date-label').textContent = 'For ' + latestDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-            document.getElementById('daily-prod-date-label').textContent = 'For ' + latestDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-            
-            document.getElementById('daily-import-val').textContent = todayData.purc.toFixed(1) + ' kWh';
-            document.getElementById('daily-export-val').textContent = todayData.feedIn.toFixed(1) + ' kWh';
-            
-            // Import cost and export credit for the latest day, at that billing period's rates
-            const dayRates = (() => {
-                const cd = appState.billingCycleDay || 23; let y = latestDate.getFullYear(), m = latestDate.getMonth();
-                if (latestDate.getDate() < cd) { m--; if (m < 0) { m = 11; y--; } }
-                const r = appState.monthlyData[`${y}-${String(m + 1).padStart(2, '0')}`]?.rates || {};
-                return { imp: r.import || parseFloat(document.getElementById('import-rate').value) || 14.42, exp: r.export || parseFloat(document.getElementById('export-rate').value) || 7.56 };
-            })();
-            const peso2 = v => v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const impCompEl = document.getElementById('daily-import-comp');
-            impCompEl.innerHTML = `Import cost <span class="font-bold">PHP ${peso2(todayData.purc * dayRates.imp)}</span><span class="block font-medium text-slate-400">${todayData.purc.toFixed(1)} kWh × PHP ${dayRates.imp.toFixed(2)}</span>`;
-            impCompEl.className = 'text-[11px] font-semibold mt-0.5 text-red-600 block';
-            const expCompEl = document.getElementById('daily-export-comp');
-            expCompEl.innerHTML = `Credit earned <span class="font-bold">PHP ${peso2(todayData.feedIn * dayRates.exp)}</span><span class="block font-medium text-slate-400">${todayData.feedIn.toFixed(1)} kWh × PHP ${dayRates.exp.toFixed(2)}</span>`;
-            expCompEl.className = 'text-[11px] font-semibold mt-0.5 text-emerald-600 block';
-
-            // Today's Production vs Yesterday
-            document.getElementById('daily-prod-today').textContent = todayData.prod.toFixed(1) + ' kWh';
-            
-            const prodCompEl = document.getElementById('daily-prod-comp');
-            if (yesterdayData && yesterdayData.prod > 0) {
-                const diff = todayData.prod - yesterdayData.prod;
-                const pct = (diff / yesterdayData.prod) * 100;
-                const isUp = diff >= 0;
-                const colorClass = isUp ? 'text-emerald-500' : 'text-red-500';
-                const icon = isUp ? 'fa-arrow-up' : 'fa-arrow-down';
-                const prevDate = new Date(previousDay + 'T00:00:00');
-                const prevDateStr = prevDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                prodCompEl.innerHTML = `<i class="fa-solid ${icon}"></i> ${Math.abs(pct).toFixed(1)}% vs ${prevDateStr} (${yesterdayData.prod.toFixed(1)} kWh)`;
-                prodCompEl.className = `text-[10px] font-semibold mt-0.5 ${colorClass} block`;
-            } else {
-                prodCompEl.className = 'hidden';
-            }
-
-            if (yesterdayData) {
-                document.getElementById('daily-prod-yesterday').textContent = yesterdayData.prod.toFixed(1) + ' kWh';
-            } else {
-                document.getElementById('daily-prod-yesterday').textContent = '0.0 kWh';
-            }
-
+            selectedDayIdx = null;
+            renderDayStrip();
             fetchWeatherForecast();
         }
 
@@ -1226,10 +1187,10 @@
             } catch (err) {
                 console.warn("Weather fetch failed, using fallback:", err);
                 container.innerHTML = `
-                    <div class="text-3xl text-amber-500"><i class="fa-solid fa-cloud-sun"></i></div>
+                    <div class="text-3xl text-slate-300"><i class="fa-solid fa-cloud"></i></div>
                     <div class="flex flex-col">
-                        <span class="text-sm font-bold text-slate-800">Partly Cloudy</span>
-                        <span class="text-xs text-slate-500 font-medium">Est: <strong class="text-amber-500">~28.5 kWh</strong> (Moderate)</span>
+                        <span class="text-sm font-bold text-slate-600">Forecast unavailable</span>
+                        <span class="text-xs text-slate-500 font-medium">The weather service didn't answer. Try again later.</span>
                     </div>
                 `;
             }
@@ -1374,7 +1335,8 @@
             }
 
             renderVsLastCycle(activeData, importCost, exportCredit);
-            if (chartInstance) chartInstance.update('none');
+            updateSettingsSummary();
+            if (chartInstance) { chartInstance.update('none'); renderDayStrip(); }
 
             // Net Estimated Bill ticker vs yesterday
             const finNetCompEl = document.getElementById('fin-net-comp');
@@ -1584,6 +1546,8 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: { padding: { bottom: 42 } },
+                    onClick: (evt, els, chart) => { const i = Math.round(chart.scales.x.getValueForPixel(evt.x)); if (i >= 0 && i < chart.data.labels.length) selectDay(i); },
+                    onHover: (evt, els, chart) => { chart.canvas.style.cursor = evt.y < chart.chartArea.bottom ? 'pointer' : 'default'; },
                     interaction: {
                         mode: 'index',
                         intersect: false,
@@ -1613,7 +1577,7 @@
                         }
                     }
                 },
-                plugins: [dayNetRowPlugin]
+                plugins: [dayNetRowPlugin, selectedDayPlugin]
             });
             chartInstance.$dayData = { feedIn, purc };
         }
@@ -1630,6 +1594,17 @@
             return { credit, cost, bill: cost - credit, balance };   // + adds to the bill, − lowers it
         }
         // Draws each day's bill change under its date: +₱ in red adds to the bill, −₱ in green lowers it.
+        // Light band behind the day shown in the day strip.
+        const selectedDayPlugin = {
+            id: 'selectedDay',
+            beforeDatasetsDraw(chart) {
+                const x = chart.scales.x, n = chart.data.labels.length; if (!x || !n) return;
+                const i = selectedDayIdx == null ? n - 1 : selectedDayIdx, w = x.width / n, cx = x.getPixelForValue(i);
+                const ctx = chart.ctx; ctx.save(); ctx.fillStyle = 'rgba(37,99,235,0.08)';
+                ctx.fillRect(cx - w / 2, chart.chartArea.top, w, chart.chartArea.bottom - chart.chartArea.top);
+                ctx.fillStyle = 'rgba(37,99,235,0.55)'; ctx.fillRect(cx - w / 2, chart.chartArea.bottom - 2, w, 2); ctx.restore();
+            }
+        };
         const dayNetRowPlugin = {
             id: 'dayNetRow',
             afterDraw(chart) {
