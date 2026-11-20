@@ -441,6 +441,7 @@
                         </div>
                     </div>
                 </div>
+                <p id="compare-key" class="text-[11px] text-slate-500 mt-3"><span class="text-emerald-600 font-semibold">Green</span> means the actual MORE bill came out better for you than the tracker estimated (less import billed, more credit, or a lower net bill); <span class="text-red-600 font-semibold">red</span> means worse.</p>
             </div>
         </div>
 
@@ -1444,21 +1445,21 @@
                 const impDiff = totals.purchased - actKwh;
                 const impDiffEl = document.getElementById('cmp-import-diff-val');
                 impDiffEl.textContent = `${impDiff >= 0 ? '+' : ''}${impDiff.toFixed(1)} kWh (${Math.abs((impDiff / actKwh) * 100).toFixed(1)}%)`;
-                impDiffEl.className = impDiff > 0 ? 'text-red-600' : 'text-emerald-600';
+                impDiffEl.className = impDiff >= 0 ? 'text-emerald-600' : 'text-red-600';   // MORE billed less import than the tracker counted
 
                 document.getElementById('cmp-est-credit').textContent = `PHP ${exportCredit.toFixed(2)}`;
                 document.getElementById('cmp-act-credit').textContent = `PHP ${actExportCredit.toFixed(2)}`;
                 const credDiff = exportCredit - actExportCredit;
                 const credDiffEl = document.getElementById('cmp-credit-diff-val');
                 credDiffEl.textContent = `${credDiff >= 0 ? '+' : '-'}PHP ${Math.abs(credDiff).toFixed(2)}` + (actExportCredit ? ` (${Math.abs(credDiff / actExportCredit * 100).toFixed(1)}%)` : '');
-                credDiffEl.className = credDiff >= 0 ? 'text-emerald-600' : 'text-red-600';
+                credDiffEl.className = credDiff <= 0 ? 'text-emerald-600' : 'text-red-600';   // MORE credited more than the tracker estimated
 
                 document.getElementById('cmp-est-net').textContent = `${netBill <= 0 ? '- ' : ''}PHP ${Math.abs(netBill).toFixed(2)}`;
                 document.getElementById('cmp-act-net').textContent = `${actNet <= 0 ? '- ' : ''}PHP ${Math.abs(actNet).toFixed(2)}`;
                 const netDiff = netBill - actNet;
                 const netDiffEl = document.getElementById('cmp-net-diff-val');
                 netDiffEl.textContent = `${netDiff >= 0 ? '+' : '-'}PHP ${Math.abs(netDiff).toFixed(2)}` + (actNet ? ` (${Math.abs(netDiff / actNet * 100).toFixed(1)}%)` : '');
-                netDiffEl.className = netDiff <= 0 ? 'text-emerald-600' : 'text-red-600';
+                netDiffEl.className = netDiff >= 0 ? 'text-emerald-600' : 'text-red-600';   // actual net bill lower (more credit) than estimated
 
                 emptyCmpEl.classList.add('hidden');
                 gridCmpEl.classList.remove('hidden');
