@@ -65,16 +65,63 @@
             </div>
         </div>
 
+        <!-- Energy Chart Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+                <h3 class="text-lg font-bold text-slate-800">Daily Energy Flows</h3>
+                <span class="text-[11px] text-slate-400">Tap any day on the chart to show its details here</span>
+            </div>
+            <!-- Day strip: the selected day (latest by default) + tomorrow's forecast -->
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr_16rem] gap-3 mb-4">
+                <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 min-w-0">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="text-sm font-bold text-slate-800 flex items-center gap-2"><span id="ds-title">--</span><span id="ds-badge" class="text-[10px] font-semibold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Latest</span></div>
+                        <button id="ds-back" type="button" class="hidden text-xs font-semibold text-blue-600 hover:underline"><i class="fa-solid fa-arrow-rotate-left"></i> Back to latest</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Imported</div><div class="text-xl font-bold text-red-600" id="ds-imp">--</div><div class="text-[11px] font-semibold" id="ds-imp-sub"></div></div>
+                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Exported</div><div class="text-xl font-bold text-emerald-600" id="ds-exp">--</div><div class="text-[11px] font-semibold" id="ds-exp-sub"></div></div>
+                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Produced</div><div class="text-xl font-bold text-amber-500" id="ds-prod">--</div><div class="text-[11px] font-semibold" id="ds-prod-sub"></div></div>
+                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Bill change</div><div class="text-xl font-bold text-slate-800" id="ds-bill">--</div><div class="text-[11px] font-semibold" id="ds-bill-sub"></div></div>
+                    </div>
+                </div>
+                <div class="rounded-lg border border-slate-200 p-3 min-w-0">
+                    <div class="flex items-center justify-between mb-2"><span class="text-sm font-bold text-slate-800">Tomorrow's forecast</span><span class="text-[11px] text-slate-400">Iloilo City</span></div>
+                    <div class="flex items-center gap-3" id="weather-forecast-container">
+                        <div class="text-3xl text-slate-300 animate-pulse"><i class="fa-solid fa-cloud-sun"></i></div>
+                        <div class="flex flex-col"><span class="text-sm font-bold text-slate-700">Loading forecast...</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="relative h-80 w-full">
+                <canvas id="energyChart"></canvas>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-2"><span class="font-semibold text-slate-600">Bill change, per day</span> (the row under the dates): that day's import cost minus its export credit, at this period's rates. <span class="text-red-600 font-semibold">+₱ in red</span> means the day added to your bill; <span class="text-emerald-600 font-semibold">−₱ in green</span> means its export credit lowered your bill. <span class="font-semibold text-slate-600">Balance</span> (the shaded row) is your bill so far this period after each day: <span class="text-red-600 font-semibold">₱ in red</span> is what you'd owe, <span class="text-emerald-600 font-semibold">−₱ in green</span> is a credit. The last day matches the Net Estimated Bill. Hover a day for the breakdown.</p>
+        </div>
+
         <!-- Billing Analysis & Tabbed View -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <!-- Tabs Header -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 mb-5 gap-3">
+            <div class="flex flex-col border-b border-slate-200 pb-3 mb-5 gap-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500">Billing period <span class="font-normal text-slate-400">· changes the totals, Daily Energy Flows and every tab</span></span>
+                <!-- Billing period picker: changes every number on the page (totals, chart, billing tabs) -->
+                    <div class="flex items-center gap-1 bg-slate-100 rounded-full p-1 w-fit shrink-0 ml-auto" title="Billing period shown on the whole page">
+                        <button id="period-prev" type="button" class="w-7 h-7 rounded-full text-slate-500 hover:bg-white hover:text-slate-800 disabled:opacity-30 disabled:hover:bg-transparent" aria-label="Previous billing period"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                        <select id="period-select" class="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer pr-1" aria-label="Billing period"></select>
+                        <button id="period-next" type="button" class="w-7 h-7 rounded-full text-slate-500 hover:bg-white hover:text-slate-800 disabled:opacity-30 disabled:hover:bg-transparent" aria-label="Next billing period"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                    </div>
+                    <div id="billing-period-display" class="hidden"></div>
+                </div>
                 <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                     <button id="tab-btn-estimated" class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-2">
                         <i class="fa-solid fa-calculator"></i> Estimated Billing
                     </button>
                     <button id="tab-btn-actual" class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center gap-2">
                         <i class="fa-solid fa-file-invoice-dollar"></i> Actual Billing
+                    </button>
+                    <button id="tab-btn-settings" class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-sliders"></i> Bill Calibration
                     </button>
                     <button id="tab-btn-compare" class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center gap-2">
                         <i class="fa-solid fa-scale-balanced"></i> Compare (Tracker vs Actual)
@@ -83,9 +130,7 @@
                         <i class="fa-solid fa-clock-rotate-left"></i> Bill History
                     </button>
                 </div>
-                <div id="billing-period-display" class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full w-fit">
-                    Period: --
-                </div>
+
             </div>
 
             <!-- TAB 1: Estimated Billing -->
@@ -138,7 +183,7 @@
 
             <!-- TAB 4: Bill History (previous bills, tracker vs actual) -->
             <div id="tab-content-history" class="hidden space-y-4">
-                <div id="bh-empty" class="bg-slate-50 border border-slate-200 text-slate-600 rounded-lg p-4 text-xs sm:text-sm">No bills saved yet. Upload a MORE bill in <strong>MORE Calibration</strong> to start the history.</div>
+                <div id="bh-empty" class="bg-slate-50 border border-slate-200 text-slate-600 rounded-lg p-4 text-xs sm:text-sm">No bills saved yet. Upload a MORE bill in the <strong>Bill Calibration</strong> tab to start the history.</div>
                 <div id="bh-body" class="hidden space-y-4">
                     <div id="bh-stats" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
                     <div class="relative h-56 w-full"><canvas id="billHistChart"></canvas></div>
@@ -152,7 +197,7 @@
                 <div id="actual-bill-empty" class="hidden bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-4 text-xs sm:text-sm flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-circle-info text-amber-500 text-base"></i>
-                        <span>No MORE bill saved for this period yet. Upload it in <strong>MORE Calibration</strong> (below the daily widgets).</span>
+                        <span>No MORE bill saved for this period yet. Upload it in the <strong>Bill Calibration</strong> tab.</span>
                     </div>
                 </div>
                 <div id="actual-bill-data" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center md:text-left">
@@ -175,195 +220,18 @@
                 <p class="text-xs text-slate-400 italic">*Note: Reflects statement figures from your official MORE Power bill for this billing cycle.</p>
             </div>
 
-            <!-- TAB 3: Compare (Tracker vs Actual) -->
-            <div id="tab-content-compare" class="hidden space-y-4">
-                <div id="compare-empty" class="hidden bg-slate-50 border border-slate-200 text-slate-600 rounded-lg p-4 text-xs sm:text-sm">
-                    Enter your actual bill details in the <strong>MORE Calibration</strong> section (below the daily widgets) to enable comparison analysis.
-                </div>
-                <div id="compare-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <!-- Column 1: Grid Import / Consumption -->
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-between">
+            <!-- TAB: Bill Calibration (billing cycle and rates, then the MORE bill) -->
+            <div id="tab-content-settings" class="hidden space-y-4">
+                <!-- MORE bill (calibration) -->
+                <div class="space-y-3">
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
                         <div>
-                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b pb-1 mb-2">Imported Energy</div>
-                            <div class="flex justify-between items-center text-xs mb-1">
-                                <span class="text-slate-600">Inverter Tracker:</span>
-                                <span class="font-semibold text-slate-800" id="cmp-track-import">0 kWh</span>
-                            </div>
-                            <div class="flex justify-between items-center text-xs mb-2">
-                                <span class="text-slate-600">MORE Power Meter:</span>
-                                <span class="font-semibold text-slate-800" id="cmp-act-import">0 kWh</span>
-                            </div>
+                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-file-arrow-up text-blue-500"></i>MORE bill</h4>
+                            <p class="text-xs text-slate-500 mt-1 mb-1">Upload your MORE bill to fill these in automatically,<br>or type them from the statement.</p>
                         </div>
-                        <div id="cmp-import-diff" class="mt-2 pt-2 border-t border-slate-200 text-xs font-bold flex justify-between items-center">
-                            <span>Variance:</span>
-                            <span id="cmp-import-diff-val">0 kWh</span>
-                        </div>
+                        <div id="calib-status" class="text-[11px] font-medium"></div>
                     </div>
-
-                    <!-- Column 2: Export Credit -->
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-between">
-                        <div>
-                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b pb-1 mb-2">Export Credit</div>
-                            <div class="flex justify-between items-center text-xs mb-1">
-                                <span class="text-slate-600">Estimated Credit:</span>
-                                <span class="font-semibold text-emerald-600" id="cmp-est-credit">PHP 0.00</span>
-                            </div>
-                            <div class="flex justify-between items-center text-xs mb-2">
-                                <span class="text-slate-600">Actual Credit:</span>
-                                <span class="font-semibold text-emerald-600" id="cmp-act-credit">PHP 0.00</span>
-                            </div>
-                        </div>
-                        <div id="cmp-credit-diff" class="mt-2 pt-2 border-t border-slate-200 text-xs font-bold flex justify-between items-center">
-                            <span>Variance:</span>
-                            <span id="cmp-credit-diff-val">PHP 0.00</span>
-                        </div>
-                    </div>
-
-                    <!-- Column 3: Net Bill Variance -->
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-between">
-                        <div>
-                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b pb-1 mb-2">Net Bill Amount</div>
-                            <div class="flex justify-between items-center text-xs mb-1">
-                                <span class="text-slate-600">Estimated Net:</span>
-                                <span class="font-semibold" id="cmp-est-net">PHP 0.00</span>
-                            </div>
-                            <div class="flex justify-between items-center text-xs mb-2">
-                                <span class="text-slate-600">Actual Net:</span>
-                                <span class="font-semibold" id="cmp-act-net">PHP 0.00</span>
-                            </div>
-                        </div>
-                        <div id="cmp-net-diff" class="mt-2 pt-2 border-t border-slate-200 text-xs font-bold flex justify-between items-center">
-                            <span>Variance:</span>
-                            <span id="cmp-net-diff-val">PHP 0.00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Energy Chart Card -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-                <h3 class="text-lg font-bold text-slate-800">Daily Energy Flows</h3>
-                <span class="text-[11px] text-slate-400">Tap any day on the chart to show its details here</span>
-            </div>
-            <!-- Day strip: the selected day (latest by default) + tomorrow's forecast -->
-            <div class="grid grid-cols-1 lg:grid-cols-[1fr_16rem] gap-3 mb-4">
-                <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 min-w-0">
-                    <div class="flex items-center justify-between gap-2 mb-2">
-                        <div class="text-sm font-bold text-slate-800 flex items-center gap-2"><span id="ds-title">--</span><span id="ds-badge" class="text-[10px] font-semibold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Latest</span></div>
-                        <button id="ds-back" type="button" class="hidden text-xs font-semibold text-blue-600 hover:underline"><i class="fa-solid fa-arrow-rotate-left"></i> Back to latest</button>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Imported</div><div class="text-xl font-bold text-red-600" id="ds-imp">--</div><div class="text-[11px] font-semibold" id="ds-imp-sub"></div></div>
-                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Exported</div><div class="text-xl font-bold text-emerald-600" id="ds-exp">--</div><div class="text-[11px] font-semibold" id="ds-exp-sub"></div></div>
-                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Produced</div><div class="text-xl font-bold text-amber-500" id="ds-prod">--</div><div class="text-[11px] font-semibold" id="ds-prod-sub"></div></div>
-                        <div class="min-w-0"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Bill change</div><div class="text-xl font-bold text-slate-800" id="ds-bill">--</div><div class="text-[11px] font-semibold" id="ds-bill-sub"></div></div>
-                    </div>
-                </div>
-                <div class="rounded-lg border border-slate-200 p-3 min-w-0">
-                    <div class="flex items-center justify-between mb-2"><span class="text-sm font-bold text-slate-800">Tomorrow's forecast</span><span class="text-[11px] text-slate-400">Iloilo City</span></div>
-                    <div class="flex items-center gap-3" id="weather-forecast-container">
-                        <div class="text-3xl text-slate-300 animate-pulse"><i class="fa-solid fa-cloud-sun"></i></div>
-                        <div class="flex flex-col"><span class="text-sm font-bold text-slate-700">Loading forecast...</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="relative h-80 w-full">
-                <canvas id="energyChart"></canvas>
-            </div>
-            <p class="text-[11px] text-slate-500 mt-2"><span class="font-semibold text-slate-600">Bill change, per day</span> (the row under the dates): that day's import cost minus its export credit, at this period's rates. <span class="text-red-600 font-semibold">+₱ in red</span> means the day added to your bill; <span class="text-emerald-600 font-semibold">−₱ in green</span> means its export credit lowered your bill. <span class="font-semibold text-slate-600">Balance</span> (the shaded row) is your bill so far this period after each day: <span class="text-red-600 font-semibold">₱ in red</span> is what you'd owe, <span class="text-emerald-600 font-semibold">−₱ in green</span> is a credit. The last day matches the Net Estimated Bill. Hover a day for the breakdown.</p>
-        </div>
-
-        <!-- Billing Settings Accordion (billing cycle start, display month, rates) -->
-        <div class="bg-blue-50 rounded-xl shadow-sm border border-blue-100 p-5 transition-all duration-300">
-            <button id="toggle-settings" type="button" aria-expanded="false" aria-controls="settings-content" class="w-full flex justify-between items-center gap-3 text-left focus:outline-none">
-                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 min-w-0">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-sliders text-blue-500"></i><h3 class="text-md font-bold text-slate-800">Billing Settings</h3></span>
-                    <span id="settings-summary" class="text-xs text-slate-500"></span>
-                </div>
-                <i id="settings-arrow" class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-300 shrink-0"></i>
-            </button>
-            <div id="settings-content" class="hidden mt-4 pt-4 border-t border-blue-200">
-                <div class="flex flex-col lg:flex-row gap-6 justify-between items-start">
-            
-            <!-- Data Source Block (Hidden) -->
-            <div class="hidden flex-col space-y-2 w-full lg:w-[28%]">
-                <label class="block text-sm font-semibold text-slate-700 h-5">Data Source (File or Google Sheets)</label>
-                <div class="flex flex-col gap-2">
-                    <input type="file" id="file-upload" multiple accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="block w-full text-sm text-slate-500
-                        file:mr-4 file:py-1 file:px-4
-                        file:rounded-md file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-blue-50 file:text-blue-700
-                        hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-md h-[34px] pt-[2px]">
-                    <div class="flex gap-2">
-                        <input type="url" id="sheet-url" placeholder="Paste Google Sheets CSV link..." class="w-full px-3 py-1 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs bg-white shadow-sm h-[34px]">
-                        <button id="sync-sheet-btn" class="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition-colors shadow-sm h-[34px]">
-                            Sync
-                        </button>
-                    </div>
-                </div>
-                <div id="sync-status" class="text-[10px] text-slate-500 mt-1 font-medium">Upload a file or sync a CSV link to begin.</div>
-            </div>
-
-            <!-- Billing Cycle Block -->
-            <div class="flex flex-col space-y-2 w-full lg:w-[20%]">
-                <label class="block text-sm font-semibold text-slate-700 h-5" title="Day of the month your billing cycle begins">Billing Cycle Start</label>
-                <input type="number" id="billing-cycle-day" min="1" max="31" value="23" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium shadow-sm h-[42px]">
-                <p class="text-[10px] text-slate-400 italic mt-1 font-medium">Day of month (e.g. 23)</p>
-            </div>
-
-            <!-- Month Selector Block -->
-            <div class="flex flex-col space-y-2 w-full lg:w-[30%] hidden" id="month-selector-container">
-                <label class="block text-sm font-semibold text-slate-700 h-5">Display Month</label>
-                <select id="month-selector" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium shadow-sm h-[42px]">
-                </select>
-                <p class="text-[10px] text-slate-400 italic mt-1 font-medium">Select billing period</p>
-            </div>
-
-            <!-- Rates & Save Block -->
-            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto lg:flex-1 justify-end">
-                <div class="flex flex-col space-y-2 w-full sm:w-auto min-w-[150px]">
-                    <div class="flex justify-between items-center h-5">
-                        <label class="block text-sm font-semibold text-red-600 truncate">Grid Import Rate (PHP)</label>
-                        <a href="https://morepower.com.ph/monthly-rates/" target="_blank" class="text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors ml-2" title="View MORE Rates"><i class="fa-solid fa-external-link-alt"></i></a>
-                    </div>
-                    <input type="number" id="import-rate" value="14.42" step="0.01" class="w-full px-3 py-2 border border-red-300 bg-red-50 text-red-600 font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm h-[42px]">
-                    <div id="import-rate-subtext" class="text-[10px] text-slate-400 italic mt-1 font-medium">Rate for current billing period</div>
-                </div>
-                
-                <div class="flex flex-col space-y-2 w-full sm:w-auto min-w-[150px]">
-                    <div class="flex justify-between items-center h-5">
-                        <label class="block text-sm font-semibold text-emerald-600 truncate">Grid Export Credit (PHP)</label>
-                    </div>
-                    <input type="number" id="export-rate" value="7.56" step="0.01" class="w-full px-3 py-2 border border-emerald-300 bg-emerald-50 text-emerald-600 font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm h-[42px]">
-                    <div id="export-rate-subtext" class="text-[10px] text-slate-400 italic mt-1 font-medium">Rate for current billing period</div>
-                </div>
-                
-                <div class="flex flex-col space-y-2 w-full sm:w-auto justify-start">
-                    <div class="h-5 hidden sm:block"></div>
-                    <button id="manual-save-btn" class="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors flex items-center justify-center gap-2 h-[42px] shadow-sm">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Save
-                    </button>
-                </div>
-            </div>
-        </div>
-            </div>
-        </div>
-
-        <!-- MORE Calibration Accordion -->
-        <div class="bg-blue-50 rounded-xl shadow-sm border border-blue-100 p-5 transition-all duration-300">
-            <button id="toggle-calibration" class="w-full flex justify-between items-center text-left focus:outline-none">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-calculator text-blue-500"></i>
-                    <h3 class="text-md font-bold text-slate-800">MORE Calibration</h3>
-                </div>
-                <i id="calibration-arrow" class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-300"></i>
-            </button>
-            
-            <div id="calibration-content" class="hidden mt-4 pt-4 border-t border-blue-200">
-                <p class="text-xs text-slate-500 mb-4">Upload your MORE bill to fill these in automatically, or type them from the statement. (e.g. Current Amount: 6,688.05, Consumption: 464 kWh, Net Metering Rate: 7.5670, Total Credit: 1,823.66)</p>
+                    
                 <!-- Upload a MORE bill: figures are read from the PDF -->
                 <div id="bill-drop" class="mb-4 rounded-lg border-2 border-dashed border-blue-300 bg-white p-4 flex flex-col sm:flex-row sm:items-center gap-3 transition-colors">
                     <i class="fa-solid fa-file-invoice text-blue-500 text-2xl"></i>
@@ -426,6 +294,80 @@
                         </button>
                     </div>
                 </div>
+                <!-- Billing cycle and rates: filled in from the bill -->
+                <div class="border-t border-slate-200 pt-4 mt-4 space-y-3">
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-sliders text-blue-500"></i>Billing cycle &amp; rates</h4>
+                            <p class="text-xs text-slate-500 mt-1">Filled in from your bill when you save it or press Use Rates. You can still change them by hand.</p>
+                        </div>
+                        <div id="settings-status" class="text-[11px] font-medium"></div>
+                    </div>
+                    <div class="flex flex-col lg:flex-row gap-6 items-start">
+            
+            <!-- Data Source Block (Hidden) -->
+            <div class="hidden flex-col space-y-2 w-full lg:w-[28%]">
+                <label class="block text-sm font-semibold text-slate-700 h-5">Data Source (File or Google Sheets)</label>
+                <div class="flex flex-col gap-2">
+                    <input type="file" id="file-upload" multiple accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="block w-full text-sm text-slate-500
+                        file:mr-4 file:py-1 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-md h-[34px] pt-[2px]">
+                    <div class="flex gap-2">
+                        <input type="url" id="sheet-url" placeholder="Paste Google Sheets CSV link..." class="w-full px-3 py-1 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs bg-white shadow-sm h-[34px]">
+                        <button id="sync-sheet-btn" class="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition-colors shadow-sm h-[34px]">
+                            Sync
+                        </button>
+                    </div>
+                </div>
+                <div id="sync-status" class="text-[10px] text-slate-500 mt-1 font-medium">Upload a file or sync a CSV link to begin.</div>
+            </div>
+
+            <!-- Billing Cycle Block -->
+            <div class="flex flex-col space-y-2 w-full lg:w-[20%]">
+                <label class="block text-sm font-semibold text-slate-700 h-5" title="Day of the month your billing cycle begins">Billing Cycle Start</label>
+                <input type="number" id="billing-cycle-day" min="1" max="31" value="23" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium shadow-sm h-[42px]">
+                <p class="text-[10px] text-slate-400 italic mt-1 font-medium">Day of month (e.g. 23)</p>
+            </div>
+
+            <!-- Month Selector Block -->
+            <div class="flex flex-col space-y-2 w-full lg:w-[30%] hidden" id="month-selector-container" style="display:none">
+                <label class="block text-sm font-semibold text-slate-700 h-5">Display Month</label>
+                <select id="month-selector" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium shadow-sm h-[42px]">
+                </select>
+                <p class="text-[10px] text-slate-400 italic mt-1 font-medium">Select billing period</p>
+            </div>
+
+            <!-- Rates & Save Block -->
+            <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto lg:flex-1">
+                <div class="flex flex-col space-y-2 w-full sm:w-auto min-w-[150px]">
+                    <div class="flex justify-between items-center h-5">
+                        <label class="block text-sm font-semibold text-red-600 truncate">Grid Import Rate (PHP)</label>
+                        <a href="https://morepower.com.ph/monthly-rates/" target="_blank" class="text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors ml-2" title="View MORE Rates"><i class="fa-solid fa-external-link-alt"></i></a>
+                    </div>
+                    <input type="number" id="import-rate" value="14.42" step="0.01" class="w-full px-3 py-2 border border-red-300 bg-red-50 text-red-600 font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm h-[42px]">
+                    <div id="import-rate-subtext" class="text-[10px] text-slate-400 italic mt-1 font-medium">Rate for current billing period</div>
+                </div>
+                
+                <div class="flex flex-col space-y-2 w-full sm:w-auto min-w-[150px]">
+                    <div class="flex justify-between items-center h-5">
+                        <label class="block text-sm font-semibold text-emerald-600 truncate">Grid Export Credit (PHP)</label>
+                    </div>
+                    <input type="number" id="export-rate" value="7.56" step="0.01" class="w-full px-3 py-2 border border-emerald-300 bg-emerald-50 text-emerald-600 font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm h-[42px]">
+                    <div id="export-rate-subtext" class="text-[10px] text-slate-400 italic mt-1 font-medium">Rate for current billing period</div>
+                </div>
+                
+                <div class="flex flex-col space-y-2 w-full sm:w-auto justify-start">
+                    <div class="h-5 hidden sm:block"></div>
+                    <button id="manual-save-btn" class="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors flex items-center justify-center gap-2 h-[42px] shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Save
+                    </button>
+                </div>
+            </div>
+        </div>
+                </div>
                 <div id="calibration-feedback" class="mt-3 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md p-2.5 hidden items-center gap-2 transition-all">
                     <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                     <span id="calibration-feedback-text"></span>
@@ -433,43 +375,107 @@
                 <div class="mt-3 text-[11px] text-blue-600 font-medium">
                     <i class="fa-solid fa-circle-info mr-1"></i> Note: For MORE Power, your Export Credit rate is typically equal to the "Generation Charge" rate on your bill (e.g. PHP 7.5670).
                 </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: Compare (Tracker vs Actual) -->
+            <div id="tab-content-compare" class="hidden space-y-4">
+                <div id="compare-empty" class="hidden bg-slate-50 border border-slate-200 text-slate-600 rounded-lg p-4 text-xs sm:text-sm">
+                    Upload your MORE bill in the <strong>Bill Calibration</strong> tab to compare it with the tracker.
+                </div>
+                <div id="compare-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Column 1: Grid Import / Consumption -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b pb-1 mb-2">Imported Energy</div>
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="text-slate-600">Inverter Tracker:</span>
+                                <span class="font-semibold text-slate-800" id="cmp-track-import">0 kWh</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs mb-2">
+                                <span class="text-slate-600">MORE Power Meter:</span>
+                                <span class="font-semibold text-slate-800" id="cmp-act-import">0 kWh</span>
+                            </div>
+                        </div>
+                        <div id="cmp-import-diff" class="mt-2 pt-2 border-t border-slate-200 text-xs font-bold flex justify-between items-center">
+                            <span>Variance:</span>
+                            <span id="cmp-import-diff-val">0 kWh</span>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Export Credit -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b pb-1 mb-2">Export Credit</div>
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="text-slate-600">Estimated Credit:</span>
+                                <span class="font-semibold text-emerald-600" id="cmp-est-credit">PHP 0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs mb-2">
+                                <span class="text-slate-600">Actual Credit:</span>
+                                <span class="font-semibold text-emerald-600" id="cmp-act-credit">PHP 0.00</span>
+                            </div>
+                        </div>
+                        <div id="cmp-credit-diff" class="mt-2 pt-2 border-t border-slate-200 text-xs font-bold flex justify-between items-center">
+                            <span>Variance:</span>
+                            <span id="cmp-credit-diff-val">PHP 0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Net Bill Variance -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b pb-1 mb-2">Net Bill Amount</div>
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="text-slate-600">Estimated Net:</span>
+                                <span class="font-semibold" id="cmp-est-net">PHP 0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs mb-2">
+                                <span class="text-slate-600">Actual Net:</span>
+                                <span class="font-semibold" id="cmp-act-net">PHP 0.00</span>
+                            </div>
+                        </div>
+                        <div id="cmp-net-diff" class="mt-2 pt-2 border-t border-slate-200 text-xs font-bold flex justify-between items-center">
+                            <span>Variance:</span>
+                            <span id="cmp-net-diff-val">PHP 0.00</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Battery & Backup (Deye Sync script: Daily Checks + Dawn Window + Charge Log tabs) -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
-            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-car-battery text-blue-600 mr-2"></i>Battery &amp; Backup</h3>
+        <!-- Battery & Backup (collapsible: blue while closed, white while open) -->
+        <div id="bat-card" class="bg-blue-50 rounded-xl shadow-sm border border-blue-100 p-5 transition-colors duration-300">
+            <button id="toggle-battery" data-acc-toggle type="button" aria-expanded="false" aria-controls="battery-content" class="w-full flex justify-between items-center gap-3 text-left focus:outline-none">
+                <div class="min-w-0">
+                    <h3 class="text-md font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-car-battery text-blue-500"></i>Battery &amp; Backup</h3>
                     <p class="text-xs text-slate-500 mt-1">Deye SE-F16 16 kWh · night floor <span id="bat-floor-label">23–25%</span> · outage shutdown <span id="bat-shutdown-label">11%</span> · restart 20%</p>
+                    <div id="bat-status-m" class="sm:hidden text-[11px] font-medium mt-1"></div>
                 </div>
-                <div id="bat-status" class="text-[11px] text-slate-500 font-medium">Loading battery data…</div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <!-- Battery watchdog -->
-                <div class="rounded-lg border border-slate-200 p-4 space-y-3 min-w-0">
-                    <div class="flex justify-between items-baseline">
-                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Battery watchdog</h4>
-                        <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">last 14 days</span>
-                    </div>
-                    <div id="wd-banner" class="rounded-md p-3 bg-slate-50 border border-slate-200 text-sm text-slate-600">No checks yet.</div>
-                    <div id="wd-dots" class="grid gap-1" style="grid-template-columns:repeat(14,minmax(0,1fr))"></div>
-                    <dl id="wd-kv" class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs"></dl>
+                <div class="flex items-center gap-3 shrink-0">
+                    <div id="bat-status" class="hidden sm:block text-[11px] text-slate-500 font-medium">Loading battery data…</div>
+                    <i id="battery-arrow" data-acc-arrow class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-300"></i>
                 </div>
-
-                <!-- Battery full charge cycle (Charge Log + Daily Checks tabs) -->
-                <div class="rounded-lg border border-slate-200 p-4 space-y-3 min-w-0">
-                    <div class="flex justify-between items-baseline">
-                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Battery full charge cycle</h4>
-                        <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">last 30 days</span>
+            </button>
+            <div id="battery-content" data-acc-content class="hidden mt-4 pt-4 border-t border-slate-200 space-y-5">
+            <!-- Battery Charge Cycle (Charge Log + Daily Data + Daily Checks tabs) -->
+            <div class="rounded-lg border border-slate-200 p-4 space-y-3 min-w-0">
+                <div class="flex justify-between items-baseline">
+                    <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Battery Charge Cycle</h4>
+                    <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">last 30 days</span>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div class="space-y-3 min-w-0">
+                        <div id="cl-counter" class="grid grid-cols-2 gap-3"></div>
+                        <div id="cl-banner" class="rounded-md p-3 bg-slate-50 border border-slate-200 text-sm text-slate-600">No charge data yet.</div>
+                        <div id="cl-bar" class="space-y-1"></div>
+                        <dl id="cl-kv" class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs"></dl>
                     </div>
-                    <div id="cl-banner" class="rounded-md p-3 bg-slate-50 border border-slate-200 text-sm text-slate-600">No charge data yet.</div>
-                    <div id="cl-bar" class="space-y-1"></div>
-                    <dl id="cl-kv" class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs"></dl>
-                    <div class="relative h-44 w-full"><canvas id="cycleChart"></canvas></div>
-                    <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500"><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:#10b981"></i>Floor → full</span><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:#0ea5e9"></i>Fastest charge</span><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:#f59e0b"></i>Highest solar peak</span><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:rgba(245,158,11,0.45)"></i>Not full</span><span class="inline-flex items-center gap-1"><i class="inline-block w-3 border-t-2 border-dashed border-slate-500"></i>Average full time</span></div>
-                    <p class="text-[11px] text-slate-500">Each bar runs from when solar starts charging the battery at the floor (about 24%) to when it reaches 100%. The dashed line is the average full time. Days that start above 30% are left out of the averages.</p>
+                    <div class="space-y-2 min-w-0">
+                        <div class="relative h-56 w-full"><canvas id="cycleChart"></canvas></div>
+                        <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500"><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:#10b981"></i>Floor → full</span><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:#0ea5e9"></i>Fastest charge</span><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:#f59e0b"></i>Highest solar peak</span><span class="inline-flex items-center gap-1"><i class="inline-block w-2.5 h-2.5 rounded-sm" style="background:rgba(245,158,11,0.45)"></i>Not full</span><span class="inline-flex items-center gap-1"><i class="inline-block w-3 border-t-2 border-dashed border-slate-500"></i>Average full time</span></div>
+                        <p class="text-[11px] text-slate-500">Each bar runs from when solar starts charging the battery at the floor (about 24%) to when it reaches 100%. The dashed line is the average full time. Days that start above 30% are left out of the averages.</p>
+                    </div>
                 </div>
             </div>
 
@@ -493,6 +499,7 @@
                 <div id="dw-banner" class="rounded-md p-3 bg-slate-50 border border-slate-200 text-sm text-slate-600">No mornings recorded yet.</div>
                 <div id="dw-stats" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
                 <div class="overflow-x-auto"><table id="dw-table" class="w-full text-xs whitespace-nowrap"></table></div>
+            </div>
             </div>
         </div>
 
@@ -651,7 +658,8 @@
                 production: getOriginalKey(['production']),
                 consumption: getOriginalKey(['consumption']),
                 feedIn: getOriginalKey(['feed-in', 'feedin', 'export']),
-                purchased: getOriginalKey(['purchased', 'import', 'gridkw'])
+                purchased: getOriginalKey(['purchased', 'import', 'gridkw']),
+                discharge: getOriginalKey(['discharge'])
             };
             
             const newDailyData = {};
@@ -670,6 +678,7 @@
                 newDailyData[dayKey].cons += parseFloat(row[keyMap.consumption]) || 0;
                 newDailyData[dayKey].feedIn += parseFloat(row[keyMap.feedIn]) || 0;
                 newDailyData[dayKey].purc += parseFloat(row[keyMap.purchased]) || 0;
+                if (keyMap.discharge) newDailyData[dayKey].dis = (newDailyData[dayKey].dis || 0) + (parseFloat(row[keyMap.discharge]) || 0);
             });
 
             if (!appState.historicalDaily) appState.historicalDaily = {};
@@ -860,34 +869,58 @@
             }
         });
 
-        // Toggle Calibration Accordion
-        document.getElementById('toggle-calibration').addEventListener('click', () => {
-            const content = document.getElementById('calibration-content');
-            const arrow = document.getElementById('calibration-arrow');
-            content.classList.toggle('hidden');
-            if (content.classList.contains('hidden')) {
-                arrow.classList.remove('rotate-180');
-            } else {
-                arrow.classList.add('rotate-180');
-            }
-        });
 
         // Billing Settings accordion: hidden by default; the header shows the period and rates while closed.
         function updateSettingsSummary() {
             const sel = document.getElementById('month-selector');
             const period = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : '';
             const imp = parseFloat(document.getElementById('import-rate').value), exp = parseFloat(document.getElementById('export-rate').value);
-            document.getElementById('settings-summary').textContent = [period, isNaN(imp) ? '' : `Import PHP ${imp.toFixed(2)}`, isNaN(exp) ? '' : `Export PHP ${exp.toFixed(2)}`,
+            const sumEl = document.getElementById('settings-summary'); if (!sumEl) { renderAccStatuses(); return; }
+            sumEl.textContent = [period, isNaN(imp) ? '' : `Import PHP ${imp.toFixed(2)}`, isNaN(exp) ? '' : `Export PHP ${exp.toFixed(2)}`,
                 `Cycle starts day ${document.getElementById('billing-cycle-day').value || 23}`].filter(Boolean).join(' · ');
+            renderAccStatuses();
         }
-        function setSettingsOpen(open) {
-            document.getElementById('settings-content').classList.toggle('hidden', !open);
-            document.getElementById('settings-arrow').classList.toggle('rotate-180', open);
-            document.getElementById('toggle-settings').setAttribute('aria-expanded', String(open));
-            try { localStorage.setItem('billingSettingsOpen', open ? '1' : '0'); } catch (e) {}
+        // Collapsible sections (Battery & Backup, Billing Settings, MORE Calibration): blue while closed, white while open.
+        function setAccordion(cardId, open, storageKey, onOpen) {
+            const card = document.getElementById(cardId); if (!card) return;
+            card.querySelector('[data-acc-content]').classList.toggle('hidden', !open);
+            ['bg-blue-50', 'border-blue-100'].forEach(c => card.classList.toggle(c, !open));
+            ['bg-white', 'border-slate-200'].forEach(c => card.classList.toggle(c, open));
+            card.querySelector('[data-acc-arrow]').classList.toggle('rotate-180', open);
+            card.querySelector('[data-acc-toggle]').setAttribute('aria-expanded', String(open));
+            try { localStorage.setItem(storageKey, open ? '1' : '0'); } catch (e) {}
+            if (open && onOpen) requestAnimationFrame(onOpen);
         }
-        document.getElementById('toggle-settings').addEventListener('click', () => setSettingsOpen(document.getElementById('settings-content').classList.contains('hidden')));
-        try { if (localStorage.getItem('billingSettingsOpen') === '1') setSettingsOpen(true); } catch (e) {}
+        function wireAccordion(cardId, storageKey, onOpen) {
+            const card = document.getElementById(cardId); if (!card) return;
+            card.querySelector('[data-acc-toggle]').addEventListener('click', () => setAccordion(cardId, card.querySelector('[data-acc-content]').classList.contains('hidden'), storageKey, onOpen));
+            try { if (localStorage.getItem(storageKey) === '1') setAccordion(cardId, true, storageKey, onOpen); } catch (e) {}
+        }
+        // "✓ Updated 9:45 PM" (or "Nov 18, 9:45 PM" when it wasn't today) in each section header.
+        function updatedLabel(iso) {
+            const d = iso ? new Date(iso) : null; if (!d || isNaN(d)) return '';
+            const t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            return d.toDateString() === new Date().toDateString() ? t : `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${t}`;
+        }
+        function setAccStatus(id, iso, text) {
+            const el = document.getElementById(id); if (!el) return;
+            const t = text || (updatedLabel(iso) ? `Updated ${updatedLabel(iso)}` : '');
+            el.innerHTML = t ? `<span class="text-emerald-600"><i class="fa-solid fa-check"></i> ${t}</span>` : '';
+            const m = document.getElementById(id + '-m'); if (m) m.innerHTML = el.innerHTML;
+        }
+        function renderAccStatuses() {
+            setAccStatus('settings-status', appState.settingsUpdatedAt || appState.lastSynced);
+            let calibText = '';
+            if (!appState.calibUpdatedAt && typeof allBills === 'function') { const bl = allBills(); if (bl.length) calibText = `Latest bill: ${bl[bl.length - 1].label}`; }
+            setAccStatus('calib-status', appState.calibUpdatedAt, calibText);
+        }
+        const stamp = key => { appState[key] = new Date().toISOString(); renderAccStatuses(); };
+        wireAccordion('settings-card', 'billingSettingsOpen');
+        wireAccordion('calib-card', 'calibrationOpen');
+        document.getElementById('manual-save-btn').addEventListener('click', () => { stamp('settingsUpdatedAt'); saveDashboardState(); });
+        ['import-rate', 'export-rate', 'billing-cycle-day'].forEach(id => document.getElementById(id)?.addEventListener('change', () => stamp('settingsUpdatedAt')));
+        ['actual-bill-amount', 'actual-bill-kwh', 'actual-export-rate', 'actual-total-credit'].forEach(id => document.getElementById(id)?.addEventListener('change', () => stamp('calibUpdatedAt')));
+        document.getElementById('apply-effective-rate-btn').addEventListener('click', () => { stamp('calibUpdatedAt'); stamp('settingsUpdatedAt'); });
         ['month-selector', 'import-rate', 'export-rate', 'billing-cycle-day'].forEach(id => { const el = document.getElementById(id); el && el.addEventListener('change', updateSettingsSummary); el && el.addEventListener('input', updateSettingsSummary); });
 
         // Billing Tabs Navigation
@@ -901,33 +934,43 @@
         const tabContentCmp = document.getElementById('tab-content-compare');
         const tabContentHist = document.getElementById('tab-content-history');
 
+        const BILL_TABS = ['estimated', 'actual', 'settings', 'compare', 'history'];
         function switchBillingTab(activeTab) {
-            [tabBtnEst, tabBtnAct, tabBtnCmp, tabBtnHist].forEach(btn => {
-                if (!btn) return;
-                btn.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center gap-2";
+            BILL_TABS.forEach(t => {
+                const btn = document.getElementById('tab-btn-' + t), cnt = document.getElementById('tab-content-' + t), on = t === activeTab;
+                if (btn) btn.className = 'px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center gap-2 ' + (on ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200');
+                if (cnt) cnt.classList.toggle('hidden', !on);
             });
-            [tabContentEst, tabContentAct, tabContentCmp, tabContentHist].forEach(cnt => cnt?.classList.add('hidden'));
-
-            if (activeTab === 'estimated') {
-                tabBtnEst.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-2";
-                tabContentEst.classList.remove('hidden');
-            } else if (activeTab === 'actual') {
-                tabBtnAct.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-2";
-                tabContentAct.classList.remove('hidden');
-            } else if (activeTab === 'history') {
-                tabBtnHist.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-2";
-                tabContentHist.classList.remove('hidden');
-                renderBillHistory();
-            } else if (activeTab === 'compare') {
-                tabBtnCmp.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-2";
-                tabContentCmp.classList.remove('hidden');
-            }
+            if (activeTab === 'history') renderBillHistory();
+            try { localStorage.setItem('billingTab', activeTab); } catch (e) {}
         }
+        BILL_TABS.forEach(t => document.getElementById('tab-btn-' + t)?.addEventListener('click', () => switchBillingTab(t)));
+        try { let t = localStorage.getItem('billingTab'); if (t === 'calib') t = 'settings'; if (t && t !== 'estimated' && BILL_TABS.includes(t)) switchBillingTab(t); } catch (e) {}
 
-        tabBtnEst?.addEventListener('click', () => switchBillingTab('estimated'));
-        tabBtnAct?.addEventListener('click', () => switchBillingTab('actual'));
-        tabBtnCmp?.addEventListener('click', () => switchBillingTab('compare'));
-        tabBtnHist?.addEventListener('click', () => switchBillingTab('history'));
+        // Billing period picker in the tab header. It drives the same selector as before, so the totals,
+        // Daily Energy Flows and every billing tab switch to the chosen period together.
+        function syncPeriodPicker() {
+            const src = document.getElementById('month-selector'), pick = document.getElementById('period-select');
+            if (!src || !pick) return;
+            const opts = Array.from(src.options);
+            if (pick.options.length !== opts.length || opts.some((o, i) => pick.options[i].value !== o.value || pick.options[i].text !== o.text)) {
+                pick.innerHTML = opts.map(o => `<option value="${o.value}">${o.text}</option>`).join('');
+            }
+            pick.value = src.value;
+            const i = src.selectedIndex;                  // newest period is first
+            document.getElementById('period-prev').disabled = i < 0 || i >= opts.length - 1;
+            document.getElementById('period-next').disabled = i <= 0;
+        }
+        function choosePeriod(value) {
+            const src = document.getElementById('month-selector');
+            if (!src || !value || src.value === value) return;
+            src.value = value;
+            src.dispatchEvent(new Event('change'));
+            syncPeriodPicker();
+        }
+        document.getElementById('period-select').addEventListener('change', e => choosePeriod(e.target.value));
+        document.getElementById('period-prev').addEventListener('click', () => { const src = document.getElementById('month-selector'); const o = src.options[src.selectedIndex + 1]; if (o) choosePeriod(o.value); });
+        document.getElementById('period-next').addEventListener('click', () => { const src = document.getElementById('month-selector'); const o = src.options[src.selectedIndex - 1]; if (o) choosePeriod(o.value); });
 
         function getPreviousMonthKey(monthKey) {
             if (!monthKey || monthKey === 'Legacy') return null;
@@ -1085,6 +1128,7 @@
             document.getElementById('export-rate-subtext').textContent = `Rate for ${periodText}`;
             const periodDisplay = document.getElementById('billing-period-display');
             if (periodDisplay) periodDisplay.textContent = `Period: ${periodText}`;
+            syncPeriodPicker();
 
             updateKPIs(activeData.totals, prevData ? prevData.totals : null);
             updateFinancials();
@@ -1137,7 +1181,7 @@
             if (v) {
                 const r = v.bill;
                 set('ds-bill', `${r > 0.005 ? '+' : r < -0.005 ? '−' : ''}PHP ${p2(r)}`, 'text-xl font-bold ' + (r > 0.005 ? 'text-red-600' : r < -0.005 ? 'text-emerald-600' : 'text-slate-600'));
-                set('ds-bill-sub', `${r > 0.005 ? 'Added to your bill' : 'Credit, lowered your bill'} <span class="block font-medium text-slate-400">Balance so far: ${v.balance < 0 ? '−' : ''}PHP ${p2(v.balance)}</span>`,
+                set('ds-bill-sub', r > 0.005 ? 'Added to your bill' : 'Credit to your bill',
                     'text-[11px] font-semibold ' + (r > 0.005 ? 'text-red-600' : 'text-emerald-600'));
             }
         }
@@ -1406,14 +1450,14 @@
                 document.getElementById('cmp-act-credit').textContent = `PHP ${actExportCredit.toFixed(2)}`;
                 const credDiff = exportCredit - actExportCredit;
                 const credDiffEl = document.getElementById('cmp-credit-diff-val');
-                credDiffEl.textContent = `${credDiff >= 0 ? '+' : ''}PHP ${credDiff.toFixed(2)}`;
+                credDiffEl.textContent = `${credDiff >= 0 ? '+' : '-'}PHP ${Math.abs(credDiff).toFixed(2)}` + (actExportCredit ? ` (${Math.abs(credDiff / actExportCredit * 100).toFixed(1)}%)` : '');
                 credDiffEl.className = credDiff >= 0 ? 'text-emerald-600' : 'text-red-600';
 
                 document.getElementById('cmp-est-net').textContent = `${netBill <= 0 ? '- ' : ''}PHP ${Math.abs(netBill).toFixed(2)}`;
                 document.getElementById('cmp-act-net').textContent = `${actNet <= 0 ? '- ' : ''}PHP ${Math.abs(actNet).toFixed(2)}`;
                 const netDiff = netBill - actNet;
                 const netDiffEl = document.getElementById('cmp-net-diff-val');
-                netDiffEl.textContent = `${netDiff >= 0 ? '+' : ''}PHP ${netDiff.toFixed(2)}`;
+                netDiffEl.textContent = `${netDiff >= 0 ? '+' : '-'}PHP ${Math.abs(netDiff).toFixed(2)}` + (actNet ? ` (${Math.abs(netDiff / actNet * 100).toFixed(1)}%)` : '');
                 netDiffEl.className = netDiff <= 0 ? 'text-emerald-600' : 'text-red-600';
 
                 emptyCmpEl.classList.add('hidden');
@@ -1911,6 +1955,39 @@
                 (HAS_SHEET ? ' Bills are read from the Bills tab of your Sheet.' : ' On this site, bills you upload are saved in this browser only.');
         }
 
+        // Use an uploaded bill to set the billing cycle and rates for its period (and for later periods that have no rates of their own).
+        function applyBillRates(rec) {
+            const notes = [];
+            const newest = allBills().every(b => b.month <= rec.month);
+            if (newest && rec.end) {                       // the next period starts on this bill's reading date
+                const day = new Date(rec.end + 'T00:00:00').getDate();
+                if (day !== (appState.billingCycleDay || 23)) {
+                    appState.billingCycleDay = day; document.getElementById('billing-cycle-day').value = day; rebuildMonthlyData();
+                    notes.push(`Billing cycle now starts on day ${day}.`);
+                }
+            }
+            const k = cycleKeyFor(rec.start), md = k && appState.monthlyData && appState.monthlyData[k];
+            if (!md) return notes.concat(['No inverter data for this bill\'s period, so the rates were not changed.']).join(' ');
+            const imp = rec.gross != null && rec.imp ? rec.gross / rec.imp : null;
+            const exp = rec.exportRate || (rec.exp ? rec.credit / rec.exp : null);
+            md.actuals = { bill: rec.gross, kwh: rec.imp, exportRate: exp != null ? Number(exp.toFixed(4)) : '', totalCredit: rec.credit, source: 'bill' };
+            if (imp && exp) {
+                md.rates = { import: Number(imp.toFixed(4)), export: Number(exp.toFixed(4)), explicit: true };
+                const keys = Object.keys(appState.monthlyData).sort();
+                for (let i = keys.indexOf(k) + 1; i < keys.length; i++) {
+                    const later = appState.monthlyData[keys[i]];
+                    if (later.rates && later.rates.explicit) break;
+                    later.rates = { import: md.rates.import, export: md.rates.export };
+                }
+                appState.rates = { import: md.rates.import, export: md.rates.export };
+                document.getElementById('import-rate').value = md.rates.import; document.getElementById('export-rate').value = md.rates.export;   // saving reads these inputs
+                notes.push(`Rates set to import PHP ${imp.toFixed(2)} (current amount ÷ kWh) and export PHP ${exp.toFixed(2)} for this period and the periods after it.`);
+                appState.settingsUpdatedAt = new Date().toISOString();
+            }
+            appState.activeMonth = k;
+            return notes.join(' ');
+        }
+
         async function loadSheetBills() {
             if (!HAS_SHEET) return;
             try {
@@ -1951,10 +2028,12 @@
                     try { where = `${rec.label} ${await saveBillToSheet(rec)} in the Bills tab.`; await loadSheetBills(); }
                     catch (e) { where = `Saved in this browser; the Bills tab could not be updated (${sheetErrorText(e)}).`; }
                 }
+                const applied = applyBillRates(rec);
                 saveDashboardState(); updateView(); renderBillHistory();
                 document.getElementById('bill-review').classList.add('hidden');
                 const fb = document.getElementById('calibration-feedback'), fbt = document.getElementById('calibration-feedback-text');
-                fbt.textContent = `${rec.label} bill saved: net ${php(rec.net)}. ${where} The figures below are filled in; press Use Rates to apply its rates.`;
+                appState.calibUpdatedAt = new Date().toISOString(); renderAccStatuses(); saveDashboardState();
+                fbt.textContent = `${rec.label} bill saved: net ${php(rec.net)}. ${where} ${applied}`;
                 fb.classList.remove('hidden'); fb.classList.add('flex');
                 pendingBill = null; brMsg('');
             } finally { btn.disabled = false; }
@@ -2156,6 +2235,30 @@
             const peakDays = C.filter(r => r.day >= since && r.peak != null);
             const top = peakDays.reduce((a, b) => (a == null || b.peak > a.peak) ? b : a, null);
                 const fullCount = W30.filter(r => r.full != null).length;
+            // Lifetime counter: full charges (days that reached 100%) and equivalent full cycles (discharged kWh ÷ 16 kWh)
+            const fullAll = L.filter(r => r.full != null && (r.day < today || r.status === 'Full')).length;
+            const disDays = Object.entries(appState.historicalDaily || {}).filter(([k, d]) => d && d.dis != null).sort();
+            const disKwh = disDays.reduce((s, [, d]) => s + (d.dis || 0), 0);
+            const firstDay = L.length ? L[0].day : (disDays[0] ? disDays[0][0] : null);
+            const sinceLabel = firstDay ? new Date(firstDay + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+            const ctile = (k, v, sub) => `<div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">${k}</div><div class="text-2xl font-black text-slate-800 leading-tight">${v}</div><div class="text-[11px] text-slate-500">${sub}</div></div>`;
+            // Deye SE-F16 (manual): at least 6,000 cycles to 70% capacity; warranty covers 25 MWh of throughput (= 1,562 full 16 kWh cycles).
+            const RATED_CYCLES = 6000, WARRANTY_KWH = 25000, BAT_KWH = 16;
+            const cycles = disKwh / BAT_KWH;
+            const daysLogged = disDays.length;
+            const perDay = daysLogged ? disKwh / daysLogged : 0;
+            const yearWhen = kwhLeft => { if (!perDay) return '—'; const d = new Date(); d.setDate(d.getDate() + Math.round(kwhLeft / perDay)); return d.getFullYear(); };
+            const lifeBar = (pct, color) => `<div class="h-2 rounded-full bg-slate-100 overflow-hidden mt-1"><div class="h-full rounded-full ${color}" style="width:${Math.max(0.8, Math.min(100, pct))}%"></div></div>`;
+            const ratedPct = cycles / RATED_CYCLES * 100, warrPct = disKwh / WARRANTY_KWH * 100;
+            document.getElementById('cl-counter').innerHTML = !L.length ? '' :
+                ctile('Full charges', fullAll.toLocaleString(), `times it reached 100% since ${sinceLabel}`) +
+                ctile('Charge cycles', daysLogged ? cycles.toFixed(1) : '—', daysLogged ? `${Math.round(disKwh).toLocaleString()} kWh discharged ÷ ${BAT_KWH} kWh` : 'needs Daily Data') +
+                (daysLogged ? `<div class="col-span-2 bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-2 text-[11px] text-slate-600">
+                    <div><div class="flex justify-between gap-2"><span><span class="font-semibold text-slate-700">Rated life</span> · ${cycles.toFixed(1)} of ${RATED_CYCLES.toLocaleString()} cycles</span><span class="font-semibold text-slate-700">${ratedPct.toFixed(1)}%</span></div>${lifeBar(ratedPct, 'bg-blue-500')}
+                        <div class="text-slate-400 mt-0.5">At ~${perDay.toFixed(1)} kWh a day, about ${(RATED_CYCLES / (perDay / BAT_KWH) / 365).toFixed(0)} years of cycling (until ~${yearWhen(RATED_CYCLES * BAT_KWH - disKwh)}); capacity is then about 70%.</div></div>
+                    <div><div class="flex justify-between gap-2"><span><span class="font-semibold text-slate-700">Warranty</span> · ${(disKwh / 1000).toFixed(2)} of 25 MWh (≈ ${Math.round(WARRANTY_KWH / BAT_KWH).toLocaleString()} cycles)</span><span class="font-semibold text-slate-700">${warrPct.toFixed(1)}%</span></div>${lifeBar(warrPct, 'bg-amber-500')}
+                        <div class="text-slate-400 mt-0.5">At this pace the 25 MWh is used up around ${yearWhen(WARRANTY_KWH - disKwh)}. Check Deye's warranty letter for whether years or MWh run out first.</div></div>
+                </div>` : '');
             document.getElementById('cl-kv').innerHTML = !W30.length ? '' : kv([
                 ['Usually full at', clock(avgFull), 'text-emerald-600'],
                 [`Avg charge time, ${fx(avgStartSoc, 0)}% → 100%`, hrs(avgHours)],
@@ -2230,6 +2333,8 @@
                     td(r.gap == null ? '—' : r.gap > 0 ? hrs(r.gap / 60) : 'none', r.gap > 0 ? 'text-red-600 font-semibold' : 'text-emerald-600') + '</tr>').join('') + '</tbody>';
         }
 
+        wireAccordion('bat-card', 'batteryOpen', () => [cycleChartInstance, clChartInstance].forEach(c => c && c.resize()));
+
         async function syncBattery() {
             const status = document.getElementById('bat-status');
             const msgs = [];
@@ -2241,13 +2346,14 @@
                 }
             };
             await Promise.all([
-                load(CHECKS_CSV, 'Daily Checks', parseChecks, C => { BATDATA.C = C; renderWatchdog(C); }),
+                load(CHECKS_CSV, 'Daily Checks', parseChecks, C => { BATDATA.C = C; }),
                 load(DAWN_CSV, 'Dawn Window', parseDawn, renderDawn),
                 load(CHARGE_CSV, 'Charge Log', parseCharge, L => { BATDATA.L = L; }),
             ]);
             renderCharge(BATDATA.L, BATDATA.C);
             status.innerHTML = msgs.length ? `<span class="text-amber-600"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(msgs.join(' · '))}</span>`
-                : `<span class="text-emerald-600"><i class="fa-solid fa-check"></i> Updated ${new Date().toLocaleTimeString()}</span>`;
+                : `<span class="text-emerald-600"><i class="fa-solid fa-check"></i> Updated ${updatedLabel(new Date().toISOString())}</span>`;
+            const statusM = document.getElementById('bat-status-m'); if (statusM) statusM.innerHTML = status.innerHTML;
         }
 
         // Refresh when the page is opened again after a while (phones keep tabs asleep).
