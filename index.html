@@ -163,7 +163,7 @@
                         
                     </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center md:text-left">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-center md:text-left">
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estimated Import Cost</div>
                         <div class="text-xl font-bold text-slate-800 mt-1" id="fin-import">PHP 0.00</div>
@@ -179,6 +179,12 @@
                         <div class="text-2xl font-black mt-1" id="fin-net">PHP 0.00</div>
                         <div id="fin-carry" class="hidden text-[11px] mt-1"></div>
                         <div id="fin-net-comp" class="hidden text-xs font-semibold mt-1"></div>
+                    </div>
+                    <div id="prev-card" class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Previous Amount</div>
+                        <div class="text-2xl font-black mt-1 text-slate-400" id="prev-amt">—</div>
+                        <div id="prev-sub" class="text-[11px] mt-1 text-slate-500">Upload last month's bill to see it</div>
+                        <div id="prev-diff" class="hidden text-xs font-semibold mt-1"></div>
                     </div>
                 </div>
 
@@ -307,6 +313,7 @@
                             <div class="flex-1 min-w-0">
                                 <div class="text-sm font-bold text-slate-800">1. Main bill</div>
                                 <div class="text-xs text-slate-500">Residential account: kWh bought and the current amount</div>
+                                <div id="slot-main-file" class="hidden text-[11px] text-slate-700 font-medium mt-1 truncate"></div>
                                 <div id="slot-main-status" class="text-[11px] font-semibold mt-1 text-slate-400">Not uploaded yet</div>
                             </div>
                             <label class="shrink-0 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold cursor-pointer flex items-center gap-1.5">
@@ -319,6 +326,7 @@
                             <div class="flex-1 min-w-0">
                                 <div class="text-sm font-bold text-slate-800">2. Net metering bill</div>
                                 <div class="text-xs text-slate-500">Net Metering account: kWh exported and the credit</div>
+                                <div id="slot-net-file" class="hidden text-[11px] text-slate-700 font-medium mt-1 truncate"></div>
                                 <div id="slot-net-status" class="text-[11px] font-semibold mt-1 text-slate-400">Not uploaded yet</div>
                             </div>
                             <label class="shrink-0 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold cursor-pointer flex items-center gap-1.5">
@@ -1435,6 +1443,7 @@
                     el.innerHTML = `<span class="text-slate-500">This period ${netBill < 0 ? '- ' : ''}${money(netBill)}</span> <span class="font-semibold ${amt < 0 ? 'text-emerald-600' : 'text-red-600'}">${amt < 0 ? '−' : '+'} ${money(amt)} ${amt < 0 ? 'credit' : 'past due'} from the ${c.bill.label} bill</span>`;
                 } else el.className = 'hidden';
             })();
+            renderPrevAmount(netBill);
             renderVsLastCycle(activeData, importCost, exportCredit);
             updateSettingsSummary();
             if (chartInstance) { chartInstance.update('none'); renderDayStrip(); }
@@ -1752,7 +1761,7 @@
         let pendingBill = null;
         let billHistChartInstance = null;
 
-        const bMoney = s => { if (s == null) return null; const t = String(s).trim(); const neg = /^\(.*\)$/.test(t) || /^-/.test(t); const v = parseFloat(t.replace(/[(),\s-]/g, '')); return isNaN(v) ? null : (neg ? -v : v); };
+        const bMoney = s => { if (s == null) return null; const t = String(s).trim(); const neg = /[()]/.test(t) || /^-/.test(t); const v = parseFloat(t.replace(/[(),\s-]/g, '')); return isNaN(v) ? null : (neg ? -v : v); };
         const bNum = v => { const x = parseFloat(String(v ?? '').replace(/[,\s]/g, '')); return isNaN(x) ? null : x; };
         const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         const bEsc = v => String(v ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[c]));
@@ -1762,6 +1771,12 @@
         const monthLabel = ym => { const [y, m] = ym.split('-').map(Number); return `${BILL_MON[m - 1]} ${y}`; };
         const parseMonDate = (d, mon, y) => { const m = BILL_MON.findIndex(x => x.toLowerCase() === mon.slice(0, 3).toLowerCase()); return m < 0 ? null : new Date(Number(y), m, Number(d)); };
 
+        // A month name as OCR may misread it: 0/O, 1/t/l, 5/S, 6/c, 8/B, 9/g.
+        const OCR_ALT = { o: '[o0]', t: '[t1l]', s: '[s5]', c: '[c6(]', b: '[b8]', g: '[g9]', l: '[l1i|]', a: '[a4]', e: '[e3]' };
+        const fuzzyMonDate = (d, mon, y) => {
+            const m = BILL_MON.findIndex(x => new RegExp('^' + x.toLowerCase().split('').map(ch => OCR_ALT[ch] || ch).join('') + '$', 'i').test(mon));
+            return m < 0 ? null : new Date(Number(y), m, Number(d));
+        };
         /** Read the figures out of one MORE statement's text. */
         function parseMoreBillText(raw) {
             const t = String(raw || '').replace(/\s+/g, ' ');
@@ -1769,7 +1784,18 @@
             const out = { account: /Class:\s*NET\s*METERING/i.test(t) || /\bNET\s*METERING\b/i.test(t.slice(0, 400)) ? 'net' : 'residential' };
             const per = t.match(/(\d{1,2})-([A-Za-z]{3})-(\d{4})\s*-\s*(\d{1,2})-([A-Za-z]{3})-(\d{4})/);
             if (per) { out.start = parseMonDate(per[1], per[2], per[3]); out.end = parseMonDate(per[4], per[5], per[6]); }
-            const bm = t.match(/Billing Month[\s\S]{0,120}?\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(20\d{2})\b/);
+            else {
+                // Pictures of bills: OCR can misread letters ("Oct" as "0c1"). Read the end date, then the start date loosely.
+                const pe = t.match(/(\S{4,14})\s*-\s*(\d{1,2})-([A-Za-z]{3})-(\d{4})/) || t.match(/Reading Date[\s\S]{0,80}?(\d{1,2})-([A-Za-z]{3})-(\d{4})/);
+                if (pe) {
+                    const e4 = pe.length === 5;
+                    out.end = e4 ? parseMonDate(pe[2], pe[3], pe[4]) : parseMonDate(pe[1], pe[2], pe[3]);
+                    const sm = e4 && pe[1].match(/^(\d{2})-?(\S{3})-?(\d{4})$/);
+                    if (sm) out.start = fuzzyMonDate(sm[1], sm[2], sm[3]);
+                    if (out.end && !out.start) { const d = new Date(out.end); d.setMonth(d.getMonth() - 1); out.start = d; }
+                }
+            }
+            const bm = t.match(/Billing Month[\s\S]{0,220}?\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(20\d{2})\b/);
             if (bm) out.month = `${bm[2]}-${String(BILL_MON.indexOf(bm[1]) + 1).padStart(2, '0')}`;
             else if (out.end) out.month = `${out.end.getFullYear()}-${String(out.end.getMonth() + 1).padStart(2, '0')}`;
             const cons = t.match(/Multiplier\s+Consumption\s+([\d,]+(?:\.\d+)?)\s+([\d,]+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+([\d,]+(?:\.\d+)?)/);
@@ -1804,6 +1830,50 @@
                 text += c.items.map(it => it.str).join(' ') + '\n';
             }
             return { pdf, text };
+        }
+        // Bills saved as a picture (no text inside): read the page with OCR right in the browser.
+        let tessLoad = null;
+        function loadTesseract() {
+            if (window.Tesseract) return Promise.resolve();
+            if (!tessLoad) tessLoad = new Promise((res, rej) => {
+                const sc = document.createElement('script');
+                sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+                sc.onload = res; sc.onerror = () => { tessLoad = null; rej(new Error('The text reader did not load')); };
+                document.head.appendChild(sc);
+            });
+            return tessLoad;
+        }
+        async function pdfPageCanvas(pdf) {
+            const page = await pdf.getPage(1), vp = page.getViewport({ scale: 2.5 });
+            const canvas = document.createElement('canvas'); canvas.width = vp.width; canvas.height = vp.height;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+            return canvas;
+        }
+        async function imageCanvas(file) {
+            const bmp = await createImageBitmap(file), k = Math.max(1, Math.min(3, 2400 / Math.max(bmp.width, bmp.height)));
+            const canvas = document.createElement('canvas'); canvas.width = Math.round(bmp.width * k); canvas.height = Math.round(bmp.height * k);
+            canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+            return canvas;
+        }
+        // Black-and-white copy: drops the yellow highlights that confuse OCR on MORE bills.
+        function inkOnly(src) {
+            const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+            const cx = c.getContext('2d'); cx.drawImage(src, 0, 0);
+            const im = cx.getImageData(0, 0, c.width, c.height), d = im.data;
+            for (let i = 0; i < d.length; i += 4) { const v = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) < 150 ? 0 : 255; d[i] = d[i + 1] = d[i + 2] = v; }
+            cx.putImageData(im, 0, 0);
+            return c;
+        }
+        async function ocrBill(canvas) {
+            await loadTesseract();
+            const work = (async () => {
+                const w = await Tesseract.createWorker('eng', 1, { langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int' });
+                try { return (await w.recognize(inkOnly(canvas))).data.text; } finally { w.terminate(); }
+            })();
+            const text = await Promise.race([work, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 90000))]);
+            const p = parseMoreBillText(text);
+            if (p) p.ocr = true;
+            return p;
         }
         async function pdfPageImage(pdf) {
             const page = await pdf.getPage(1), vp = page.getViewport({ scale: 2 });
@@ -1860,7 +1930,9 @@
         // Two upload slots: the Main (Residential) bill and the Net Metering bill. A bill dropped in the wrong slot
         // is recognised from its "Class:" line and put where it belongs.
         const slotParts = { residential: null, net: null };
+        const slotFiles = { main: null, net: null };   // { name, ok } of the last file put in each slot
         const SLOT_OF = { main: 'residential', net: 'net' };
+        const SLOT_KEY = { residential: 'main', net: 'net' };
         function renderSlots() {
             const fmtSlot = (p, kind) => {
                 if (!p) return ['Not uploaded yet', 'text-slate-400'];
@@ -1870,11 +1942,20 @@
                     : [`✓ ${mo} · ${p.kwh != null ? Math.round(p.kwh) + ' kWh bought' : '—'} · ${p.total != null ? php(p.total) : '—'}`, 'text-emerald-600'];
             };
             [['main', slotParts.residential, 'main'], ['net', slotParts.net, 'net']].forEach(([key, part, kind]) => {
-                const [t, cls] = fmtSlot(part, kind), el = document.getElementById(`slot-${key}-status`);
+                let [t, cls] = fmtSlot(part, kind);
+                const f = slotFiles[key], el = document.getElementById(`slot-${key}-status`), fEl = document.getElementById(`slot-${key}-file`);
+                if (f && f.reading) { t = 'Reading…'; cls = 'text-blue-600'; }
+                else if (f && !f.ok && !part) { t = '⚠ Could not read this file: type its figures in below'; cls = 'text-amber-600'; }
                 el.textContent = t; el.className = 'text-[11px] font-semibold mt-1 ' + cls;
+                if (fEl) {
+                    if (f) { fEl.innerHTML = '<i class="fa-solid fa-paperclip mr-1 text-slate-400"></i>'; fEl.appendChild(document.createTextNode(f.name)); fEl.title = f.name; fEl.className = 'text-[11px] text-slate-700 font-medium mt-1 truncate block'; }
+                    else fEl.className = 'hidden';
+                }
+                const drop = document.getElementById(`bill-drop-${key}`);
+                if (drop) { drop.classList.toggle('border-emerald-400', !!part); drop.classList.toggle('border-solid', !!part); drop.classList.toggle('border-blue-300', !part); drop.classList.toggle('border-dashed', !part); }
             });
         }
-        function resetSlots() { slotParts.residential = null; slotParts.net = null; renderSlots(); clearRatePreview(); }
+        function resetSlots() { slotParts.residential = null; slotParts.net = null; slotFiles.main = null; slotFiles.net = null; renderSlots(); clearRatePreview(); }
         const PREVIEW_IDS = ['import-rate', 'export-rate', 'billing-cycle-day', 'actual-bill-amount', 'actual-bill-kwh', 'actual-export-rate', 'actual-total-credit'];
         function clearRatePreview() { PREVIEW_IDS.forEach(id => document.getElementById(id)?.classList.remove('ring-2', 'ring-amber-400')); }
         // As soon as a bill is read: show its billing period, and fill in its cycle day and rates (highlighted until saved).
@@ -1903,28 +1984,39 @@
             brMsg('Reading the bill…', 'busy');
             let note = '';
             try {
-                const parts = [], scans = [];
+                const parts = [], scans = [], unread = [];
+                slotFiles[slot] = { name: list.map(f => f.name).join(', '), ok: false, reading: true }; renderSlots();
                 for (const f of list) {
-                    if (/^image\//.test(f.type)) { scans.push(f); continue; }
-                    const { pdf, text } = await pdfToText(f);
-                    const p = parseMoreBillText(text);
-                    if (p) parts.push(p); else scans.push(await pdfPageImage(pdf));
+                    let p = null, canvas = null, pdf = null;
+                    if (/^image\//.test(f.type)) canvas = await imageCanvas(f);
+                    else { const r = await pdfToText(f); pdf = r.pdf; p = parseMoreBillText(r.text); }
+                    if (!p) {
+                        brMsg('This bill is a picture. Reading its text… (about 10 seconds)', 'busy');
+                        try { canvas = canvas || await pdfPageCanvas(pdf); p = await ocrBill(canvas); } catch (e) { p = null; }
+                    }
+                    if (p) { p.file = f.name; parts.push(p); }
+                    else { unread.push(f.name); if (canvas) scans.push(await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85))); }
                 }
                 if (scans.length) {
                     brMsg('This bill is a scan. Asking Claude to read it…', 'busy');
                     let read = null;
                     try { read = await readScanWithClaude(scans); } catch (e) { note = e && e.code === 'not_granted' ? ' Claude was not allowed to read the scan.' : ' Claude could not read the scan.'; }
-                    if (read && read.length) { parts.push(...read.map(r => ({ ...r, account: r.account || SLOT_OF[slot] }))); note = ' Read by Claude from a scan: please double-check every figure.'; }
-                    else if (!note) note = ' This bill is a scan, so type its figures in below.';
+                    if (read && read.length) { parts.push(...read.map(r => ({ ...r, account: r.account || SLOT_OF[slot], file: unread.join(', ') }))); unread.length = 0; note = ' Read by Claude from a scan: please double-check every figure.'; }
+                    else if (!note) note = ' This file could not be read, so type its figures in below.';
                 }
+                slotFiles[slot] = null;
+                if (parts.some(pt => pt.ocr)) note += ' Read from a picture of the bill: please double-check the figures.';
                 parts.forEach(pt => {
                     if (pt.account !== SLOT_OF[slot]) note += ` That was the ${pt.account === 'net' ? 'Net Metering' : 'Main (Residential)'} bill, so it went in that slot.`;
                     slotParts[pt.account] = pt;
+                    slotFiles[SLOT_KEY[pt.account]] = { name: pt.file || list[0].name, ok: true };
                 });
+                if (!parts.length && unread.length) slotFiles[slot] = { name: unread.join(', '), ok: false };
                 renderSlots();
                 const b = mergeStatements([slotParts.residential, slotParts.net].filter(Boolean));
                 previewFromBill(b);
                 showReview(b, (b.sources.length ? 'Read from: ' + b.sources.join(' + ') : 'Nothing could be read') + '.' + note);
+                renderSlots();
                 const months = [slotParts.residential, slotParts.net].filter(Boolean).map(x => x.month).filter(Boolean);
                 if (new Set(months).size > 1) { brMsg('The two bills are for different months. Upload the matching one.', 'err'); return; }
                 const missing = [];
@@ -1934,6 +2026,7 @@
                 else brMsg(missing.length ? `Now upload ${missing.join(' and ')}, or type its figures in.` : 'Both bills read. Check the figures, then save.', missing.length ? '' : '');
             } catch (e) {
                 brMsg('Could not read that file: ' + (e && e.message ? e.message : e), 'err');
+                slotFiles[slot] = { name: list.map(f => f.name).join(', '), ok: false }; renderSlots();
             } finally {
                 drop.classList.remove('opacity-60');
                 document.getElementById('bill-file-' + slot).value = '';
@@ -1981,6 +2074,39 @@
             if (!prev) return null;
             const amt = prev.carry != null ? prev.carry : (prev.due != null ? carryOf(prev.due, false) : null);
             return amt == null ? null : { amt, bill: prev };
+        }
+        // The bill just before a billing period (the one whose Total Amount Due feeds this period).
+        function prevBillFor(monthKey) {
+            if (!monthKey || typeof allBills !== 'function') return null;
+            const [y, m] = monthKey.split('-').map(Number), cd = appState.billingCycleDay || 23;
+            const start = new Date(y, m - 1, cd); start.setDate(start.getDate() + 3);
+            const iso = isoDay(start);
+            return allBills().filter(b => b.end && b.end <= iso).sort((a, b) => a.end < b.end ? -1 : 1).pop() || null;
+        }
+        // Previous Amount: last bill's Total Amount Due (green = credit, red = past due),
+        // and how this period's estimated amount due compares with it.
+        function renderPrevAmount(netBill) {
+            const amtEl = document.getElementById('prev-amt'), sub = document.getElementById('prev-sub'), diffEl = document.getElementById('prev-diff');
+            if (!amtEl) return;
+            const money = v => `PHP ${Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const prev = prevBillFor(appState.activeMonth);
+            if (!prev || prev.due == null || isNaN(prev.due)) {
+                amtEl.textContent = '—'; amtEl.className = 'text-2xl font-black mt-1 text-slate-400';
+                sub.textContent = prev ? `${prev.label} bill: upload it again to read its Total Amount Due` : 'Upload last month\'s bill to see it';
+                sub.className = 'text-[11px] mt-1 text-slate-500'; diffEl.className = 'hidden'; return;
+            }
+            const due = prev.due, carry = prev.carry != null ? prev.carry : carryOf(due, false);
+            amtEl.textContent = `${due < 0 ? '- ' : ''}${money(due)}`;
+            const credit = due < 0, pastDue = !credit && Math.abs(carry || 0) > 0.005;
+            amtEl.className = 'text-2xl font-black mt-1 ' + (credit ? 'text-emerald-600' : pastDue ? 'text-red-600' : 'text-slate-800');
+            sub.textContent = `${prev.label} bill · ${credit ? 'credit carried to this bill' : pastDue ? 'past due, added to this bill' : 'paid'}`;
+            sub.className = 'text-[11px] mt-1 font-semibold ' + (credit ? 'text-emerald-600' : pastDue ? 'text-red-600' : 'text-slate-500');
+            // Compare this period's estimated amount due (incl. the carried amount) with last bill's amount due.
+            const est = netBill + (carry || 0), d = est - due, pct = Math.abs(due) > 0.005 ? d / Math.abs(due) * 100 : null;
+            if (Math.abs(d) < 0.005) { diffEl.className = 'text-xs font-semibold mt-1 text-slate-500 block'; diffEl.textContent = 'Same as last month'; return; }
+            const better = d < 0;
+            diffEl.className = 'text-xs font-semibold mt-1 block ' + (better ? 'text-emerald-600' : 'text-red-600');
+            diffEl.innerHTML = `<i class="fa-solid fa-arrow-${better ? 'down' : 'up'}"></i> ${better ? '−' : '+'}${money(d)}${pct != null ? ` (${better ? '−' : '+'}${Math.abs(pct).toFixed(1)}%)` : ''} vs last month`;
         }
         function carryForMonth(monthKey) {
             if (!monthKey || typeof allBills !== 'function') return null;
