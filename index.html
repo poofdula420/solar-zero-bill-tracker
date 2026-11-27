@@ -177,14 +177,12 @@
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estimated Amount Due</div>
                         <div class="text-2xl font-black mt-1" id="fin-net">PHP 0.00</div>
-                        <div id="fin-carry" class="hidden text-[11px] mt-1"></div>
                         <div id="fin-net-comp" class="hidden text-xs font-semibold mt-1"></div>
                     </div>
-                    <div id="prev-card" class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Previous Amount</div>
-                        <div class="text-2xl font-black mt-1 text-slate-400" id="prev-amt">—</div>
-                        <div id="prev-sub" class="text-[11px] mt-1 text-slate-500">Upload last month's bill to see it</div>
-                        <div id="prev-diff" class="hidden text-xs font-semibold mt-1"></div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estimated Total Amount Due</div>
+                        <div class="text-2xl font-black mt-1" id="fin-total">PHP 0.00</div>
+                        <div id="fin-carry" class="text-[11px] mt-1 text-slate-500"></div>
                     </div>
                 </div>
 
@@ -203,11 +201,12 @@
                         <span>No MORE bill saved for this period yet. Upload it in the <strong>History</strong> tab.</span>
                     </div>
                 </div>
-                <div id="actual-bill-data" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center md:text-left">
+                <div id="actual-bill-data" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-center md:text-left">
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Current Amount (Gross)</div>
                         <div class="text-xl font-bold text-slate-800 mt-1" id="act-gross">PHP 0.00</div>
                         <div class="text-[11px] text-slate-400 mt-1" id="act-kwh-sub">Billed: 0 kWh</div>
+                        <div class="text-[11px] text-slate-400" id="act-effective-sub"></div>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Metering Export Credit</div>
@@ -215,10 +214,15 @@
                         <div class="text-[11px] text-slate-400 mt-1" id="act-rate-sub">Rate: PHP 0.00/kWh</div>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Actual Net Bill Amount</div>
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Previous Amount</div>
+                        <div class="text-xl font-bold mt-1 text-slate-400" id="prev-amt">—</div>
+                        <div id="prev-sub" class="text-[11px] mt-1 text-slate-400">Upload last month's bill to see it</div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Amount Due</div>
                         <div class="text-2xl font-black mt-1" id="act-net-bill">PHP 0.00</div>
-                        <div class="text-[11px] text-slate-400 mt-1" id="act-effective-sub">Effective Rate: --</div>
-                        <div id="act-due" class="hidden text-[11px] mt-1"></div>
+                        <div id="act-due-sub" class="text-[11px] mt-1 text-slate-400"></div>
+                        <div id="prev-diff" class="hidden text-xs font-semibold mt-1"></div>
                     </div>
                 </div>
                 </div>
@@ -1431,19 +1435,26 @@
                 bannerIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-600"></i>';
             }
 
-            // Estimated amount due: this period's net plus the previous bill's carried credit (green) or past due (red).
+            // Estimated Amount Due = this period only. Estimated Total Amount Due = that plus the previous bill's
+            // credit (subtracts) or past due (adds), the same way MORE works out the Total Amount Due.
             (() => {
-                const c = carryForMonth(appState.activeMonth), amt = c ? c.amt : 0, due = netBill + amt;
                 const money = v => `PHP ${Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                finNetEl.textContent = `${due < 0 ? '- ' : ''}${money(due)}`;
-                finNetEl.className = 'text-2xl font-black mt-1 ' + (due <= 0 ? 'text-emerald-600' : 'text-red-600');
-                const el = document.getElementById('fin-carry');
+                finNetEl.textContent = `${netBill < 0 ? '- ' : ''}${money(netBill)}`;
+                finNetEl.className = 'text-2xl font-black mt-1 ' + (netBill <= 0 ? 'text-emerald-600' : 'text-red-600');
+                const c = carryForMonth(appState.activeMonth), prev = prevBillFor(appState.activeMonth);
+                const amt = c ? c.amt : 0, total = netBill + amt;
+                const totEl = document.getElementById('fin-total'), el = document.getElementById('fin-carry');
+                totEl.textContent = `${total < 0 ? '- ' : ''}${money(total)}`;
+                totEl.className = 'text-2xl font-black mt-1 ' + (total <= 0 ? 'text-emerald-600' : 'text-red-600');
+                const word = total < 0 ? 'Net credit' : 'To pay';
                 if (c && Math.abs(amt) > 0.005) {
-                    el.className = 'text-[11px] mt-1 block';
-                    el.innerHTML = `<span class="text-slate-500">This period ${netBill < 0 ? '- ' : ''}${money(netBill)}</span> <span class="font-semibold ${amt < 0 ? 'text-emerald-600' : 'text-red-600'}">${amt < 0 ? '−' : '+'} ${money(amt)} ${amt < 0 ? 'credit' : 'past due'} from the ${c.bill.label} bill</span>`;
-                } else el.className = 'hidden';
+                    el.className = 'text-[11px] mt-1 font-semibold ' + (total <= 0 ? 'text-emerald-600' : 'text-red-600');
+                    el.textContent = `${word} · ${amt < 0 ? 'less the ' + money(amt) + ' credit' : 'plus the ' + money(amt) + ' past due'} from the ${c.bill.label} bill`;
+                } else {
+                    el.className = 'text-[11px] mt-1 text-slate-500';
+                    el.textContent = prev ? `${word} · nothing carried from the ${prev.label} bill${prev.due > 0 ? ' (paid)' : ''}` : `${word} · no earlier bill saved`;
+                }
             })();
-            renderPrevAmount(netBill);
             renderVsLastCycle(activeData, importCost, exportCredit);
             updateSettingsSummary();
             if (chartInstance) { chartInstance.update('none'); renderDayStrip(); }
@@ -1497,10 +1508,8 @@
                 document.getElementById('act-export-credit').textContent = `PHP ${actExportCredit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 document.getElementById('act-rate-sub').textContent = !isNaN(actUserCredit) ? `Billed Credit Amount` : `Rate: PHP ${actExpRate.toFixed(4)}/kWh`;
                 
-                const actNetEl = document.getElementById('act-net-bill');
-                actNetEl.textContent = `${actNet <= 0 ? '- ' : ''}PHP ${Math.abs(actNet).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                actNetEl.className = `text-2xl font-black mt-1 ${actNet <= 0 ? 'text-emerald-600' : 'text-red-600'}`;
-                document.getElementById('act-effective-sub').textContent = `Effective Rate: PHP ${effRate.toFixed(4)}/kWh`;
+                document.getElementById('act-effective-sub').textContent = `Effective rate: PHP ${effRate.toFixed(4)}/kWh`;
+                renderActualDue(actNet);
 
                 emptyActEl.classList.add('hidden');
                 dataActEl.classList.remove('hidden');
@@ -2083,30 +2092,43 @@
             const iso = isoDay(start);
             return allBills().filter(b => b.end && b.end <= iso).sort((a, b) => a.end < b.end ? -1 : 1).pop() || null;
         }
-        // Previous Amount: last bill's Total Amount Due (green = credit, red = past due),
-        // and how this period's estimated amount due compares with it.
-        function renderPrevAmount(netBill) {
-            const amtEl = document.getElementById('prev-amt'), sub = document.getElementById('prev-sub'), diffEl = document.getElementById('prev-diff');
-            if (!amtEl) return;
+        // Actual bill: Previous Amount (last bill's credit or past due) and Total Amount Due
+        // = Current Amount − Net Metering credit + Previous Amount, i.e. the Total Amount Due on the MORE bill.
+        function renderActualDue(actNet) {
             const money = v => `PHP ${Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const amtEl = document.getElementById('prev-amt'), sub = document.getElementById('prev-sub');
+            const totEl = document.getElementById('act-net-bill'), totSub = document.getElementById('act-due-sub'), diffEl = document.getElementById('prev-diff');
+            if (!amtEl || !totEl) return;
+            const bill = allBills().find(x => x.start && cycleKeyFor(x.start) === appState.activeMonth) || null;
             const prev = prevBillFor(appState.activeMonth);
-            if (!prev || prev.due == null || isNaN(prev.due)) {
-                amtEl.textContent = '—'; amtEl.className = 'text-2xl font-black mt-1 text-slate-400';
-                sub.textContent = prev ? `${prev.label} bill: upload it again to read its Total Amount Due` : 'Upload last month\'s bill to see it';
-                sub.className = 'text-[11px] mt-1 text-slate-500'; diffEl.className = 'hidden'; return;
+            const prevCarry = prev ? (prev.carry != null ? prev.carry : carryOf(prev.due, false)) : null;
+            // Previous Amount card
+            if (prev && prev.due != null && !isNaN(prev.due)) {
+                const credit = prev.due < 0, pastDue = !credit && Math.abs(prevCarry || 0) > 0.005;
+                amtEl.textContent = `${credit ? '- ' : ''}${money(prev.due)}`;
+                amtEl.className = 'text-xl font-bold mt-1 ' + (credit ? 'text-emerald-600' : pastDue ? 'text-red-600' : 'text-slate-800');
+                sub.textContent = `${prev.label} bill · ${credit ? 'credit' : pastDue ? 'past due' : 'paid'}`;
+                sub.className = 'text-[11px] mt-1 font-semibold ' + (credit ? 'text-emerald-600' : pastDue ? 'text-red-600' : 'text-slate-500');
+            } else {
+                amtEl.textContent = '—'; amtEl.className = 'text-xl font-bold mt-1 text-slate-400';
+                sub.textContent = prev ? `Upload the ${prev.label} bill again to read it` : 'No earlier bill saved';
+                sub.className = 'text-[11px] mt-1 text-slate-400';
             }
-            const due = prev.due, carry = prev.carry != null ? prev.carry : carryOf(due, false);
-            amtEl.textContent = `${due < 0 ? '- ' : ''}${money(due)}`;
-            const credit = due < 0, pastDue = !credit && Math.abs(carry || 0) > 0.005;
-            amtEl.className = 'text-2xl font-black mt-1 ' + (credit ? 'text-emerald-600' : pastDue ? 'text-red-600' : 'text-slate-800');
-            sub.textContent = `${prev.label} bill · ${credit ? 'credit carried to this bill' : pastDue ? 'past due, added to this bill' : 'paid'}`;
-            sub.className = 'text-[11px] mt-1 font-semibold ' + (credit ? 'text-emerald-600' : pastDue ? 'text-red-600' : 'text-slate-500');
-            // Compare this period's estimated amount due (incl. the carried amount) with last bill's amount due.
-            const est = netBill + (carry || 0), d = est - due, pct = Math.abs(due) > 0.005 ? d / Math.abs(due) * 100 : null;
-            if (Math.abs(d) < 0.005) { diffEl.className = 'text-xs font-semibold mt-1 text-slate-500 block'; diffEl.textContent = 'Same as last month'; return; }
-            const better = d < 0;
-            diffEl.className = 'text-xs font-semibold mt-1 block ' + (better ? 'text-emerald-600' : 'text-red-600');
-            diffEl.innerHTML = `<i class="fa-solid fa-arrow-${better ? 'down' : 'up'}"></i> ${better ? '−' : '+'}${money(d)}${pct != null ? ` (${better ? '−' : '+'}${Math.abs(pct).toFixed(1)}%)` : ''} vs last month`;
+            // Total Amount Due: the bill's own figure when it was read; otherwise worked out
+            const due = bill && bill.due != null && !isNaN(bill.due) ? bill.due : actNet + (prevCarry || 0);
+            totEl.textContent = `${due < 0 ? '- ' : ''}${money(due)}`;
+            totEl.className = 'text-2xl font-black mt-1 ' + (due <= 0 ? 'text-emerald-600' : 'text-red-600');
+            totSub.textContent = due < 0 ? 'Credit carried to the next bill' : (bill && bill.carry > 0 ? 'Not paid yet: carried as past due' : 'To pay');
+            totSub.className = 'text-[11px] mt-1 font-semibold ' + (due <= 0 ? 'text-emerald-600' : 'text-red-600');
+            // vs last month's Total Amount Due
+            if (prev && prev.due != null && !isNaN(prev.due)) {
+                const d = due - prev.due, pct = Math.abs(prev.due) > 0.005 ? d / Math.abs(prev.due) * 100 : null, better = d < 0;
+                if (Math.abs(d) < 0.005) { diffEl.className = 'text-xs font-semibold mt-1 text-slate-500 block'; diffEl.textContent = 'Same as last month'; }
+                else {
+                    diffEl.className = 'text-xs font-semibold mt-1 block ' + (better ? 'text-emerald-600' : 'text-red-600');
+                    diffEl.innerHTML = `<i class="fa-solid fa-arrow-${better ? 'down' : 'up'}"></i> ${better ? '−' : '+'}${money(d)}${pct != null ? ` (${better ? '−' : '+'}${Math.abs(pct).toFixed(1)}%)` : ''} vs last month`;
+                }
+            } else diffEl.className = 'hidden';
         }
         function carryForMonth(monthKey) {
             if (!monthKey || typeof allBills !== 'function') return null;
